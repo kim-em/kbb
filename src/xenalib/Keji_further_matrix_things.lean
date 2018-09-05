@@ -391,8 +391,7 @@ theorem det_eq_zero_of_col_eq {n:ℕ} {R : Type} [comm_ring R] (A: matrix R n n)
     e (a * (equiv.swap i j)) * finset.prod finset.univ (λ (x : fin n), A ((a * equiv.swap i j).to_fun x) x) =
     0,
     rw[e_mul a (equiv.swap i j)],
-    have h1 : i ≠ j,
-    exact absurd h a_h_h.1, 
+    have h1 : i ≠ j := a_h_h.1, 
     rw[e_swap h1],
      rw[mul_comm  (e (a)) (-1 : R) ],
         rw[neg_one_mul],
@@ -431,7 +430,7 @@ theorem det_eq_zero_of_col_eq {n:ℕ} {R : Type} [comm_ring R] (A: matrix R n n)
         simp[t],
         show _ = (equiv.swap i j).1 ((equiv.swap i j).inv_fun b),
         rw[(equiv.swap i j).4],
-      
+  },
   { intros,
     simp[g],
     assume h,
@@ -469,7 +468,8 @@ theorem det_eq_zero_of_col_eq {n:ℕ} {R : Type} [comm_ring R] (A: matrix R n n)
     rw[H7],
     simp },
   { intros,
-    simp } },
+    simp }
+     
 end
 
 theorem not_bij_not_inj {α : Type* } [s : fintype α ] {f : α  → α} (h: ¬function.bijective f ) : ¬function.injective f:= 
@@ -510,70 +510,71 @@ have H1: finset.sum (finset.pi finset.univ (λ (a : fin n), finset.univ))
                 e (x) *
                   finset.prod (finset.univ : finset( fin n) ) 
                     (λ (x_1 : fin n), A (x.to_fun x_1) (y x_1 )))),
-
-let t' : Π a ∈ (finset.pi (finset.univ :finset(fin n)) (λ (a : fin n), (finset.univ :finset(fin n)))), (fin n → fin n)  := 
- λ a ha, (λ (x: fin n), a x (finset.mem_univ x) ),
-rw[finset.sum_bij t'],
-intros,
-simp,
-intros,
-let t'' : Π a ∈ (finset.attach (finset.univ : finset (fin n))), fin n:= 
-λ a ha, a.val,
-have H12 : finset.prod (finset.attach (finset.univ : finset (fin n))) 
-(λ x , B (a x.val (finset.mem_univ _)) (x.val)) =
-finset.prod (finset.univ : finset (fin n)) 
-(λ x , B (a x (finset.mem_univ _)) x),
-rw[finset.prod_bij t''],
-intros, 
-simp,
-intros,
-simp,
-intros,
-simp[t''] at a_1,
-rw[subtype.eq a_1],
-intros,
-existsi ( ⟨ b, (finset.mem_univ _) ⟩ :  {x // x ∈ finset.univ}) ,
-refine exists.intro (by simp) _,
-refl,
-rw[H12],
-have H13: finset.sum finset.univ (λ (x :  equiv.perm (fin n)),
-           e (x) *
-             finset.prod (finset.attach finset.univ)
-               (λ (x_1 : {x // x ∈ finset.univ}), A (x.to_fun (x_1.val))
-                (a (x_1.val) (finset.mem_univ _))))= finset.sum finset.univ (λ (x :  equiv.perm (fin n)),
-           e (x) *
-             finset.prod ( finset.univ)
-               (λ x_1 , A (x.to_fun x_1)
-                (a x_1 (finset.mem_univ _)))),
-congr,
-funext,
-rw [finset.prod_bij t''],
-intros, 
-simp,
-intros,
-simp,
-intros,
-simp[t''] at a_1,
-rw[subtype.eq a_1],
-intros,
-existsi ( ⟨ b, (finset.mem_univ _) ⟩ :  {x // x ∈ finset.univ}) ,
-refine exists.intro (by simp) _,
-refl,
-rw[H13],
-intros,
-simp[t'] at a,
-funext,
-have := congr_fun a x, exact this,
-intros,
-refine exists.intro (λ(x: fin n) (h ), b x) _,
-simp,
+{
+  let t' : Π a ∈ (finset.pi (finset.univ :finset(fin n)) (λ (a : fin n), (finset.univ :finset(fin n)))), (fin n → fin n)  := 
+  λ a ha, (λ (x: fin n), a x (finset.mem_univ x) ),
+  rw[finset.sum_bij t'],
+  intros,
+  simp,
+  intros,
+  let t'' : Π a ∈ (finset.attach (finset.univ : finset (fin n))), fin n:= 
+  λ a ha, a.val,
+  have H12 : finset.prod (finset.attach (finset.univ : finset (fin n))) 
+  (λ x , B (a x.val (finset.mem_univ _)) (x.val)) =
+  finset.prod (finset.univ : finset (fin n)) 
+  (λ x , B (a x (finset.mem_univ _)) x),
+  rw[finset.prod_bij t''],
+  intros, 
+  simp,
+  intros,
+  simp,
+  intros,
+  simp[t''] at a_1,
+  rw[subtype.eq a_1],
+  intros,
+  existsi ( ⟨ b, (finset.mem_univ _) ⟩ :  {x // x ∈ finset.univ}) ,
+  refine exists.intro (by simp) _,
+  refl,
+  rw[H12],
+  have H13: finset.sum finset.univ (λ (x :  equiv.perm (fin n)),
+            e (x) *
+              finset.prod (finset.attach finset.univ)
+                (λ (x_1 : {x // x ∈ finset.univ}), A (x.to_fun (x_1.val))
+                  (a (x_1.val) (finset.mem_univ _))))= finset.sum finset.univ (λ (x :  equiv.perm (fin n)),
+            e (x) *
+              finset.prod ( finset.univ)
+                (λ x_1 , A (x.to_fun x_1)
+                  (a x_1 (finset.mem_univ _)))),
+  congr,
+  funext,
+  rw [finset.prod_bij t''],
+  intros, 
+  simp,
+  intros,
+  simp,
+  intros,
+  simp[t''] at a_1,
+  rw[subtype.eq a_1],
+  intros,
+  existsi ( ⟨ b, (finset.mem_univ _) ⟩ :  {x // x ∈ finset.univ}) ,
+  refine exists.intro (by simp) _,
+  refl,
+  rw[H13],
+  intros,
+  simp[t'] at a,
+  funext,
+  have := congr_fun a x, exact this,
+  intros,
+  refine exists.intro (λ(x: fin n) (h ), b x) _,
+  simp
+},
 rw[H1],
 have H2: (finset.univ : finset (fin n → fin n)) = 
 (finset.filter (λ f, function.bijective f) (finset.univ : finset (fin n → fin n))) ∪
  (finset.filter (λ f : fin n -> fin n, ¬ function.bijective f ) 
  (finset.univ : finset (fin n → fin n))),
-ext,
-simp [classical.em],
+  ext,
+  simp [classical.em],
 rw[H2],
 rw[finset.sum_union],
 swap 2,
@@ -591,25 +592,26 @@ have H21: finset.sum (finset.filter (λ (f : fin n → fin n), function.bijectiv
              finset.sum finset.univ
                (λ (x :  equiv.perm (fin n)), e (x) * finset.prod finset.univ (λ (x_1 : fin n),
                 A (x.to_fun x_1) (y.1 x_1)))),
-
-let t : Π a ∈ (finset.univ : finset ( equiv.perm (fin n))), fin n → fin n  :=
-  λ a ha, a.1,
-rw[finset.sum_bij t],
-intros,
-simp,
-simp[t],
-exact a.bijective,
-intros,
-simp,
-intros,
-simp[t] at a,
-exact equiv.eq_of_to_fun_eq a,
-intros,
-simp[t],
-have H22: function.bijective b,
-   {exact (finset.mem_filter.1 H).2},
-existsi @equiv.of_bijective _ _ b H22,
-exact eq.symm (equiv.of_bijective_to_fun H22),
+{
+  let t : Π a ∈ (finset.univ : finset ( equiv.perm (fin n))), fin n → fin n  :=
+    λ a ha, a.1,
+  rw[finset.sum_bij t],
+  intros,
+  simp,
+  simp[t],
+  exact a.bijective,
+  intros,
+  simp,
+  intros,
+  simp[t] at a,
+  exact equiv.eq_of_to_fun_eq a,
+  intros,
+  simp[t],
+  have H22: function.bijective b,
+    {exact (finset.mem_filter.1 H).2},
+  existsi @equiv.of_bijective _ _ b H22,
+  exact eq.symm (equiv.of_bijective_to_fun H22)
+},
 rw[H21],
 simp only[col_swap_neg_col],
 simp only[mul_comm],
