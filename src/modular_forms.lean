@@ -15,7 +15,7 @@ def is_holomorphic (f : ℍ → ℂ) : Prop := sorry
 noncomputable def «Möbius_transform» (a b c d : ℝ) (det : a * d - b * c = 1) (z : ℂ) : ℂ :=
 (↑a * z + b) / (c * z + d)
 
-lemma preserve_ℍ (a b c d : ℝ) (det : a * d - b * c = 1) (z : ℂ) (h : z.im > 0) :
+lemma preserve_ℍ {a b c d : ℝ} (det : a * d - b * c = 1) (z : ℂ) (h : z.im > 0) :
 («Möbius_transform» a b c d det z).im > 0 :=
 begin
   change ((↑a * z + ↑b) * (↑c * z + ↑d)⁻¹).im > 0,
@@ -42,11 +42,16 @@ begin
     exact ne_of_gt h rfl }
 end
 
-def aux (a b c d : ℤ) (h : a * d - b * c = 1) : (a : ℝ) * d - b * c = 1 := sorry
+def aux {a b c d : ℤ} (h : a * d - b * c = 1) : (a : ℝ) * d - b * c = 1 :=
+begin
+  have H : (↑(a * d - b * c) : ℝ) = 1 := by rw h; simp,
+  simp at H ⊢,
+  exact H
+end
 
 noncomputable def SL2Z_H : SL2Z → ℍ → ℍ :=
 λ M z,
-⟨«Möbius_transform» M.a M.b M.c M.d (sorry) z, preserve_ℍ M.a M.b M.c M.d (sorry) z z.property⟩
+⟨«Möbius_transform» M.a M.b M.c M.d (aux M.det) z, preserve_ℍ (aux M.det) z z.property⟩
 
 instance : is_group_action SL2Z_H := sorry
 
