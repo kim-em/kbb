@@ -10,7 +10,9 @@ class is_monoid_hom {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α 
 
 definition units.map {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α → β) [is_monoid_hom f] :
 units α → units β :=
-λ u, ⟨f u.val, f u.inv, sorry, sorry⟩
+λ u, ⟨f u.val, f u.inv,
+by rw [← is_monoid_hom.map_mul f, u.val_inv, is_monoid_hom.map_one f],
+by rw [← is_monoid_hom.map_mul f, u.inv_val, is_monoid_hom.map_one f] ⟩
 
 instance units.map_is_group_hom {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α → β) [is_monoid_hom f] :
 is_group_hom (units.map f) :=
