@@ -33,6 +33,9 @@ by simp [one_val, h]
 instance [has_neg α] : has_neg (matrix m n α) :=
 ⟨λ M i j, - M i j⟩
 
+@[simp] theorem neg_val [has_neg α] {M : matrix m n α} {i j} : (- M) i j = - M i j :=
+rfl
+
 instance [has_add α] : has_add (matrix m n α) :=
 ⟨λ M N i j, M i j + N i j⟩
 
@@ -49,10 +52,9 @@ instance [add_comm_semigroup α] : add_comm_semigroup (matrix m n α) :=
   ..matrix.add_semigroup }
 
 instance [add_monoid α] : add_monoid (matrix m n α) :=
-{ zero_add := λ M, ext' $ by simp,
+{ zero_add := λ M, show 0 + M = M, from ext' $ by simp,
   add_zero := λ M, ext' $ by simp,
   ..matrix.has_zero,
-  ..matrix.has_add,
   ..matrix.add_semigroup }
 
 instance [add_comm_monoid α] : add_comm_monoid (matrix m n α) :=
@@ -113,19 +115,20 @@ instance [semiring α] : monoid (matrix n n α) :=
 { one_mul := one_mul,
   mul_one := mul_one,
   ..matrix.has_one,
-  ..matrix.has_mul,
   ..matrix.semigroup }
 
+instance [add_group α] : add_group (matrix m n α) :=
+{ add_left_neg := λ M, show - M + M = 0, from ext' $ by simp,
+  ..matrix.add_monoid,
+  ..matrix.has_neg }
+
 instance [ring α] : ring (matrix n n α) :=
-{ add_left_neg := sorry,
-  one := sorry,
-  one_mul := sorry,
-  mul_one := sorry,
-  left_distrib := sorry,
+{ left_distrib := sorry,
   right_distrib := sorry,
   ..matrix.has_neg,
   ..matrix.has_zero,
   ..matrix.add_comm_monoid,
-  ..matrix.monoid }
+  ..matrix.monoid,
+  ..matrix.add_group }
 
 end matrix
