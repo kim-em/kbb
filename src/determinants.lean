@@ -4,7 +4,9 @@ universes u v
 
 variables {R : Type u} [ring R]
 
-def det {n : ℕ} : matrix R n n → R := sorry
+def matrix.det {n : ℕ} : matrix R n n → R := sorry
+
+open matrix
 
 class is_monoid_hom {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α → β) : Prop :=
 (map_mul : ∀ {x y}, f (x * y) = f x * f y)
@@ -12,12 +14,10 @@ class is_monoid_hom {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α 
 
 instance det_homomorphic (n : ℕ) : is_monoid_hom (@det R _ n) := sorry
 
-def GL (n:ℕ) (R : Type) [ring R] := units (matrix R n n)
+variables (R)
 
-instance GL_group (n:ℕ ) ( R : Type) [ring R] : group (GL n R):=
-begin
-  unfold GL,
-  apply_instance,
-end 
+def GL (n : ℕ) (R : Type u) [ring R] := units (matrix R n n)
 
+instance GL_group (n : ℕ) (R : Type u) [ring R] : group (GL n R) := by unfold GL; apply_instance
 
+-- def SL (n : ℕ) (R : Type u) [ring R] := {M : GL n R // det ↑M = (1 : R)}
