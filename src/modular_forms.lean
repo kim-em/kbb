@@ -53,5 +53,5 @@ instance : is_group_action SL2Z_H := sorry
 
 structure is_modular_form (k : ℕ) (f : ℍ → ℂ) : Prop :=
 (hol      : is_holomorphic f)
-(transf   : ∀ a b c d : ℤ, a*d - b*c = 1 → ∀ z : ℍ, f (SL2Z_H (SL2Z.mk a b c d) z) = (c*z + d)^k * f z)
+(transf   : ∀ M : SL2Z, ∀ z : ℍ, f (SL2Z_H M z) = (M.c*z + M.d)^k * f z)
 (infinity : ∃ (M A : ℝ), ∀ z : ℍ, im z ≥ A → abs (f z) ≤ M)
