@@ -43,11 +43,7 @@ begin
 end
 
 def aux {a b c d : ℤ} (h : a * d - b * c = 1) : (a : ℝ) * d - b * c = 1 :=
-begin
-  have H : (↑(a * d - b * c) : ℝ) = 1 := by rw h; simp,
-  simp at H ⊢,
-  exact H
-end
+by simpa using congr_arg (coe : ℤ → ℝ) h
 
 noncomputable def SL2Z_H : SL2Z → ℍ → ℍ :=
 λ M z,
