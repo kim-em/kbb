@@ -2,6 +2,7 @@ import tactic.ring
 import data.complex.basic
 import group_theory.group_action
 import .modular_group
+import .holomorphic_functions
 
 open complex
 
@@ -9,8 +10,6 @@ def upper_half_space := {z : ℂ // z.im > 0}
 local notation `ℍ` := upper_half_space
 
 instance upper_half_space.to_complex : has_coe ℍ ℂ := ⟨λ z, z.val⟩
-
-def is_holomorphic (f : ℍ → ℂ) : Prop := sorry
 
 noncomputable def «Möbius_transform» (a b c d : ℝ) (det : a * d - b * c = 1) (z : ℂ) : ℂ :=
 (↑a * z + b) / (c * z + d)
