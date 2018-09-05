@@ -7,7 +7,9 @@ structure SL2Z :=
 (a b c d : ℤ)
 (det : a * d - b * c = 1)
 
-lemma one_one : (1 : ℤ) * 1 = 1 := by simp
+instance : group SL2Z := sorry
+
+-- lemma one_one : (1 : ℤ) * 1 = 1 := by simp
 
 -- instance : group SL2Z :=
 -- begin refine
