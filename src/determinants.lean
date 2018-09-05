@@ -1,3 +1,4 @@
+import tactic.subtype_instance
 import .matrices
 
 universes u v
@@ -20,4 +21,6 @@ def GL (n : ℕ) (R : Type u) [ring R] := units (matrix R n n)
 
 instance GL_group (n : ℕ) (R : Type u) [ring R] : group (GL n R) := by unfold GL; apply_instance
 
--- def SL (n : ℕ) (R : Type u) [ring R] := {M : GL n R // det ↑M = (1 : R)}
+def SL (n : ℕ) (R : Type u) [ring R] := {M : GL n R // det M.val = (1 : R)}
+
+instance SL_group (n : ℕ) (R : Type u) [ring R] : group (SL n R) := sorry

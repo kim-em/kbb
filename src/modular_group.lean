@@ -1,5 +1,6 @@
 import tactic.ring
 import tactic.tidy
+import .determinants
 
 @[tidy] meta def tidy_ring := `[ring]
 
@@ -7,7 +8,19 @@ structure SL2Z :=
 (a b c d : ℤ)
 (det : a * d - b * c = 1)
 
-lemma one_one : (1 : ℤ) * 1 = 1 := by simp
+lemma foobar : SL2Z ≃ SL 2 ℤ :=
+{ to_fun    := λ M,
+  begin
+    fsplit,
+    { fsplit,
+      { intros i j, sorry } },
+    repeat {sorry}
+  end,
+  inv_fun   := sorry,
+  left_inv  := sorry,
+  right_inv := sorry }
+
+-- lemma one_one : (1 : ℤ) * 1 = 1 := by simp
 
 -- instance : group SL2Z :=
 -- begin refine
