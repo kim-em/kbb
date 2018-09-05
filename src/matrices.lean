@@ -122,13 +122,34 @@ instance [add_group α] : add_group (matrix m n α) :=
   ..matrix.add_monoid,
   ..matrix.has_neg }
 
+theorem left_distrib [add_comm_monoid α] [distrib α] (L M N : matrix n n α) :
+  L * (M + N) = (L * M) + (L * N) :=
+ext' $ λ i j,
+calc finset.univ.sum (λ j', L i j' * (M j' j + N j' j))
+  = finset.univ.sum (λ j', (λ j', L i j' * M j' j) j' + (λ j', L i j' * N j' j) j') :
+    by simp [left_distrib]
+  ... = finset.univ.sum (λ j', L i j' * M j' j) + finset.univ.sum (λ j', L i j' * N j' j) :
+    sorry -- @finset.sum_add_distrib (fin n) α finset.univ (λ j', L i j' * M j' j) (λ j', L i j' * N j' j) _
+
+theorem right_distrib [add_comm_monoid α] [distrib α] (L M N : matrix n n α) :
+  (L + M) * N = (L * N) + (M * N) :=
+ext' $ λ i j,
+calc finset.univ.sum (λ i', (L i i' + M i i') * N i' j)
+  = finset.univ.sum (λ i', (λ i', L i i' * N i' j) i' + (λ i', M i i' * N i' j) i') :
+    by simp [right_distrib]
+  ... = finset.univ.sum (λ i', L i i' * N i' j) + finset.univ.sum (λ i', M i i' * N i' j) :
+    sorry
+
+instance [distrib α] [add_comm_monoid α] : distrib (matrix n n α) :=
+{ left_distrib := left_distrib,
+  right_distrib := right_distrib,
+  ..matrix.has_mul,
+  ..matrix.has_add }
+
 instance [ring α] : ring (matrix n n α) :=
-{ left_distrib := sorry,
-  right_distrib := sorry,
-  ..matrix.has_neg,
-  ..matrix.has_zero,
-  ..matrix.add_comm_monoid,
+{ ..matrix.add_comm_monoid,
   ..matrix.monoid,
-  ..matrix.add_group }
+  ..matrix.add_group,
+  ..matrix.distrib }
 
 end matrix
