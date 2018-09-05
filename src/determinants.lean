@@ -20,23 +20,23 @@ exact is_monoid_hom.map_mul f,
 end⟩
 
 namespace matrix
-variables {R : Type u} [ring R]
+variables {n : ℕ} {R : Type u} [ring R]
 
-def det {n : ℕ} : matrix R n n → R := sorry
+definition det : matrix n n R → R := sorry
 
-lemma det_zero {n : ℕ} : det (0 : matrix R n n) = 0 := sorry
+@[simp] lemma det_zero : det (0 : matrix n n R) = (0 : R) := sorry
 
-lemma det_one {n : ℕ} : det (1 : matrix R n n) = 1 := sorry
+@[simp] lemma det_one : det (1 : matrix n n R) = (1 : R) := sorry
 
-lemma det_mul {n : ℕ} (M : matrix R n n) (N : matrix R n n) : det (M * N) = det M * det N := sorry
+@[simp] lemma det_mul (M : matrix n n R) (N : matrix n n R) : det (M * N) = det M * det N := sorry
 
-instance det_homomorphic (n : ℕ) : is_monoid_hom (det : matrix R n n → R) :=
+instance : is_monoid_hom (det : matrix n n R → R) :=
 { map_one := det_one,
   map_mul := det_mul }
 
 end matrix
 
-def GL (n : ℕ) (R : Type u) [ring R] := units (matrix R n n)
+def GL (n : ℕ) (R : Type u) [ring R] := units (matrix n n R)
 
 namespace GL
 
@@ -48,9 +48,9 @@ def det : GL n R → units R := units.map matrix.det
 
 instance : is_group_hom (det : GL n R → units R) := units.map_is_group_hom matrix.det
 
-lemma det_one : det (1 : GL n R) = 1 := is_group_hom.one det
+@[simp] lemma det_one : det (1 : GL n R) = 1 := is_group_hom.one det
 
-lemma det_mul (M : GL n R) (N : GL n R) : det (M * N) = det M * det N := is_group_hom.mul det M N
+@[simp] lemma det_mul (M : GL n R) (N : GL n R) : det (M * N) = det M * det N := is_group_hom.mul det M N
 
 end GL
 
