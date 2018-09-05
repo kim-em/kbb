@@ -18,11 +18,8 @@ instance [has_zero α] : has_zero (matrix m n α) :=
 @[simp] theorem zero_val [has_zero α] {i j} : (0 : matrix m n α) i j = 0 :=
 rfl
 
-protected def id [has_zero α] [has_one α] : matrix n n α :=
-λ i j, if i = j then 1 else 0
-
 instance [has_zero α] [has_one α] : has_one (matrix n n α) :=
-⟨matrix.id⟩
+⟨λ i j, if i = j then 1 else 0⟩
 
 theorem one_val [has_zero α] [has_one α] {i j} : (1 : matrix n n α) i j = if i = j then 1 else 0 :=
 rfl
@@ -58,6 +55,10 @@ instance [add_monoid α] : add_monoid (matrix m n α) :=
   ..matrix.has_add,
   ..matrix.add_semigroup }
 
+instance [add_comm_monoid α] : add_comm_monoid (matrix m n α) :=
+{ ..matrix.add_monoid,
+  ..matrix.add_comm_semigroup }
+
 protected def mul [has_mul α] [add_comm_monoid α] (M : matrix l m α) (N : matrix m n α) :
   matrix l n α :=
 λ i k, finset.univ.sum (λ j, M i j * N j k)
@@ -68,6 +69,10 @@ rfl
 
 instance [has_mul α] [add_comm_monoid α] : has_mul (matrix n n α) :=
 ⟨matrix.mul⟩
+
+@[simp] theorem mul_val' [has_mul α] [add_comm_monoid α] {M N : matrix n n α} {i k} :
+  (M * N) i k = finset.univ.sum (λ j, M i j * N j k) :=
+rfl
 
 theorem mul_assoc [semiring α] (L : matrix l m α)
   (M : matrix m n α) (N : matrix n o α) : L.mul (M.mul N) = (L.mul M).mul N :=
@@ -84,6 +89,33 @@ instance [semiring α] : semigroup (matrix n n α) :=
 { mul_assoc := λ L M N, (mul_assoc L M N).symm,
   ..matrix.has_mul }
 
+theorem one_mul [semiring α] (M : matrix n n α) : (1 : matrix n n α).mul M = M :=
+ext' $ λ i j,
+have h : ∀ (j' : fin n), j' ∈ (finset.univ : finset (fin n)) → j' ∉ finset.singleton i → (1 : matrix n n α) i j' * M j' j = 0 :=
+  λ j' h₁ h₂, by simp at h₂; simp [ne.symm h₂],
+calc finset.univ.sum (λ i', (1 : matrix n n α) i i' * M i' j)
+  = (finset.singleton i).sum (λ i', (1 : matrix n n α) i i' * M i' j) :
+    (finset.sum_subset (finset.subset_univ (finset.singleton i)) h).symm
+  ... = M i j :
+    by simp
+
+theorem mul_one [semiring α] (M : matrix n n α) : M.mul (1 : matrix n n α) = M :=
+ext' $ λ i j,
+have h : ∀ (j' : fin n), j' ∈ (finset.univ : finset (fin n)) → j' ∉ finset.singleton j → M i j' * (1 : matrix n n α) j' j = 0 :=
+  λ j' h₁ h₂, by simp at h₂; simp [h₂],
+calc finset.univ.sum (λ j',  M i j' * (1 : matrix n n α) j' j)
+  = (finset.singleton j).sum (λ j', M i j' * (1 : matrix n n α) j' j) :
+    (finset.sum_subset (finset.subset_univ (finset.singleton j)) h).symm
+  ... = M i j :
+    by simp
+
+instance [semiring α] : monoid (matrix n n α) :=
+{ one_mul := one_mul,
+  mul_one := mul_one,
+  ..matrix.has_one,
+  ..matrix.has_mul,
+  ..matrix.semigroup }
+
 instance [ring α] : ring (matrix n n α) :=
 { add_left_neg := sorry,
   one := sorry,
@@ -93,8 +125,7 @@ instance [ring α] : ring (matrix n n α) :=
   right_distrib := sorry,
   ..matrix.has_neg,
   ..matrix.has_zero,
-  ..matrix.add_comm_semigroup,
-  ..matrix.add_monoid,
-  ..matrix.semigroup }
+  ..matrix.add_comm_monoid,
+  ..matrix.monoid }
 
 end matrix
