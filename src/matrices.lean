@@ -1,4 +1,5 @@
 import algebra.big_operators data.set.finite
+import category_theory.category
 
 universes u v
 
@@ -125,9 +126,9 @@ instance : semigroup (matrix n n α) :=
 end semigroup
 
 section monoid
-variables [decidable_eq n] [semiring α]
+variables [decidable_eq n] [decidable_eq m] [semiring α]
 
-theorem one_mul (M : matrix n n α) : (1 : matrix n n α).mul M = M :=
+theorem one_mul (M : matrix n m α) : (1 : matrix n n α).mul M = M :=
 ext' $ λ i j,
 have h : ∀ (j' : n), j' ∈ (finset.univ : finset n) → j' ∉ finset.singleton i → (1 : matrix n n α) i j' * M j' j = 0 :=
   λ j' h₁ h₂, by simp at h₂; simp [ne.symm h₂],
@@ -137,12 +138,12 @@ calc finset.univ.sum (λ i', (1 : matrix n n α) i i' * M i' j)
   ... = M i j :
     by simp
 
-theorem mul_one (M : matrix n n α) : M.mul (1 : matrix n n α) = M :=
+theorem mul_one (M : matrix n m α) : M.mul (1 : matrix m m α) = M :=
 ext' $ λ i j,
-have h : ∀ (j' : n), j' ∈ (finset.univ : finset n) → j' ∉ finset.singleton j → M i j' * (1 : matrix n n α) j' j = 0 :=
+have h : ∀ (j' : m), j' ∈ (finset.univ : finset m) → j' ∉ finset.singleton j → M i j' * (1 : matrix m m α) j' j = 0 :=
   λ j' h₁ h₂, by simp at h₂; simp [h₂],
-calc finset.univ.sum (λ j',  M i j' * (1 : matrix n n α) j' j)
-  = (finset.singleton j).sum (λ j', M i j' * (1 : matrix n n α) j' j) :
+calc finset.univ.sum (λ j',  M i j' * (1 : matrix m m α) j' j)
+  = (finset.singleton j).sum (λ j', M i j' * (1 : matrix m m α) j' j) :
     (finset.sum_subset (finset.subset_univ (finset.singleton j)) h).symm
   ... = M i j :
     by simp
@@ -154,6 +155,26 @@ instance : monoid (matrix n n α) :=
   ..matrix.semigroup }
 
 end monoid
+
+section free_module
+
+def free_module (α : Type v) [R : semiring α] : Type (u+1) := Σ n : Type u, fintype n × decidable_eq n
+
+variables [semiring α]
+instance (M : free_module α) : fintype M.1 := M.2.1
+instance (M : free_module α) : decidable_eq M.1 := M.2.2
+
+open category_theory
+
+instance : category (free_module α) :=
+{ hom  := λ m n, matrix m.1 n.1 α,
+  id   := λ m, 1,
+  comp := λ _ _ _ M N, M.mul N,
+  comp_id' := λ _ _ M, mul_one M,
+  id_comp' := λ _ _ M, one_mul M,
+  assoc'   := λ _ _ _ _ L M N, (mul_assoc L M N).symm }
+
+end free_module
 
 instance [add_group α] : add_group (matrix m n α) :=
 { add_left_neg := λ M, show - M + M = 0, from ext' $ by simp,
