@@ -1,47 +1,75 @@
 import algebra.big_operators data.set.finite
 
-def {u} matrix (m n : ℕ) (α : Type u) : Type u := fin m → fin n → α
+universes u v
+
+def matrix (m n : Type u) [fintype m] [fintype n] (α : Type v) : Type (max u v) :=
+m → n → α
 
 namespace matrix
-variables {l m n o : ℕ}
-variables {α : Type*}
+variables {l m n o : Type u} [fintype l] [fintype m] [fintype n] [fintype o]
+variables {α : Type v}
 
-def ext {M N : matrix m n α} : (∀ i j, M i j = N i j) ↔ M = N :=
+section ext
+variables {M N : matrix m n α}
+
+def ext : (∀ i j, M i j = N i j) ↔ M = N :=
 ⟨λ h, funext $ λ i, funext $ λ j, h i j, λ h, by simp [h]⟩
 
-@[extensionality] theorem ext' {M N : matrix m n α} : (∀ i j, M i j = N i j) → M = N :=
+@[extensionality] theorem ext' : (∀ i j, M i j = N i j) → M = N :=
 ext.mp
 
-instance [has_zero α] : has_zero (matrix m n α) :=
+end ext
+
+section zero
+variables [has_zero α]
+
+instance : has_zero (matrix m n α) :=
 ⟨λ _ _, 0⟩
 
-@[simp] theorem zero_val [has_zero α] {i j} : (0 : matrix m n α) i j = 0 :=
+@[simp] theorem zero_val {i j} : (0 : matrix m n α) i j = 0 :=
 rfl
 
-instance [has_zero α] [has_one α] : has_one (matrix n n α) :=
+end zero
+
+section one
+variables [decidable_eq n] [has_zero α] [has_one α]
+
+instance : has_one (matrix n n α) :=
 ⟨λ i j, if i = j then 1 else 0⟩
 
-theorem one_val [has_zero α] [has_one α] {i j} : (1 : matrix n n α) i j = if i = j then 1 else 0 :=
+theorem one_val {i j} : (1 : matrix n n α) i j = if i = j then 1 else 0 :=
 rfl
 
-@[simp] theorem one_val_eq [has_zero α] [has_one α] {i} : (1 : matrix n n α) i i = 1 :=
+@[simp] theorem one_val_eq {i} : (1 : matrix n n α) i i = 1 :=
 by simp [one_val]
 
-@[simp] theorem one_val_ne [has_zero α] [has_one α] {i j} (h : i ≠ j) : (1 : matrix n n α) i j = 0 :=
+@[simp] theorem one_val_ne {i j} (h : i ≠ j) : (1 : matrix n n α) i j = 0 :=
 by simp [one_val, h]
 
-instance [has_neg α] : has_neg (matrix m n α) :=
+end one
+
+section neg
+variables [has_neg α]
+
+instance : has_neg (matrix m n α) :=
 ⟨λ M i j, - M i j⟩
 
-@[simp] theorem neg_val [has_neg α] {M : matrix m n α} {i j} : (- M) i j = - M i j :=
+@[simp] theorem neg_val {M : matrix m n α} {i j} : (- M) i j = - M i j :=
 rfl
 
-instance [has_add α] : has_add (matrix m n α) :=
+end neg
+
+section add
+variables [has_add α]
+
+instance : has_add (matrix m n α) :=
 ⟨λ M N i j, M i j + N i j⟩
 
-@[simp] theorem add_val [has_add α] {M N : matrix m n α} {i j} :
+@[simp] theorem add_val {M N : matrix m n α} {i j} :
   (M + N) i j = M i j + N i j :=
 rfl
+
+end add
 
 instance [add_semigroup α] : add_semigroup (matrix m n α) :=
 { add_assoc := λ L M N, ext' $ by simp,
@@ -76,24 +104,32 @@ instance [has_mul α] [add_comm_monoid α] : has_mul (matrix n n α) :=
   (M * N) i k = finset.univ.sum (λ j, M i j * N j k) :=
 rfl
 
-theorem mul_assoc [semiring α] (L : matrix l m α)
-  (M : matrix m n α) (N : matrix n o α) : L.mul (M.mul N) = (L.mul M).mul N :=
+section semigroup
+variables [decidable_eq m] [decidable_eq n] [semiring α]
+
+theorem mul_assoc (L : matrix l m α) (M : matrix m n α) (N : matrix n o α) :
+  L.mul (M.mul N) = (L.mul M).mul N :=
 funext $ λ i, funext $ λ k,
-  calc finset.univ.sum (λ (j₁ : fin m), L i j₁ * finset.univ.sum (λ (j₂ : fin n), M j₁ j₂ * N j₂ k))
-    = finset.univ.sum (λ (j₁ : fin m), finset.univ.sum (λ (j₂ : fin n), L i j₁ * M j₁ j₂ * N j₂ k)) :
+  calc finset.univ.sum (λ (j₁ : m), L i j₁ * finset.univ.sum (λ (j₂ : n), M j₁ j₂ * N j₂ k))
+    = finset.univ.sum (λ (j₁ : m), finset.univ.sum (λ (j₂ : n), L i j₁ * M j₁ j₂ * N j₂ k)) :
       by congr; funext; rw finset.mul_sum; congr; funext; rw mul_assoc
-    ... = finset.univ.sum (λ (j₂ : fin n), finset.univ.sum (λ (j₁ : fin m), L i j₁ * M j₁ j₂ * N j₂ k)) :
+    ... = finset.univ.sum (λ (j₂ : n), finset.univ.sum (λ (j₁ : m), L i j₁ * M j₁ j₂ * N j₂ k)) :
       by rw finset.sum_comm
-    ... = finset.univ.sum (λ (j₂ : fin n), finset.univ.sum (λ (j₁ : fin m), L i j₁ * M j₁ j₂) * N j₂ k) :
+    ... = finset.univ.sum (λ (j₂ : n), finset.univ.sum (λ (j₁ : m), L i j₁ * M j₁ j₂) * N j₂ k) :
       by congr; funext; rw ←finset.sum_mul
 
-instance [semiring α] : semigroup (matrix n n α) :=
+instance : semigroup (matrix n n α) :=
 { mul_assoc := λ L M N, (mul_assoc L M N).symm,
   ..matrix.has_mul }
 
-theorem one_mul [semiring α] (M : matrix n n α) : (1 : matrix n n α).mul M = M :=
+end semigroup
+
+section monoid
+variables [decidable_eq n] [semiring α]
+
+theorem one_mul (M : matrix n n α) : (1 : matrix n n α).mul M = M :=
 ext' $ λ i j,
-have h : ∀ (j' : fin n), j' ∈ (finset.univ : finset (fin n)) → j' ∉ finset.singleton i → (1 : matrix n n α) i j' * M j' j = 0 :=
+have h : ∀ (j' : n), j' ∈ (finset.univ : finset n) → j' ∉ finset.singleton i → (1 : matrix n n α) i j' * M j' j = 0 :=
   λ j' h₁ h₂, by simp at h₂; simp [ne.symm h₂],
 calc finset.univ.sum (λ i', (1 : matrix n n α) i i' * M i' j)
   = (finset.singleton i).sum (λ i', (1 : matrix n n α) i i' * M i' j) :
@@ -101,9 +137,9 @@ calc finset.univ.sum (λ i', (1 : matrix n n α) i i' * M i' j)
   ... = M i j :
     by simp
 
-theorem mul_one [semiring α] (M : matrix n n α) : M.mul (1 : matrix n n α) = M :=
+theorem mul_one (M : matrix n n α) : M.mul (1 : matrix n n α) = M :=
 ext' $ λ i j,
-have h : ∀ (j' : fin n), j' ∈ (finset.univ : finset (fin n)) → j' ∉ finset.singleton j → M i j' * (1 : matrix n n α) j' j = 0 :=
+have h : ∀ (j' : n), j' ∈ (finset.univ : finset n) → j' ∉ finset.singleton j → M i j' * (1 : matrix n n α) j' j = 0 :=
   λ j' h₁ h₂, by simp at h₂; simp [h₂],
 calc finset.univ.sum (λ j',  M i j' * (1 : matrix n n α) j' j)
   = (finset.singleton j).sum (λ j', M i j' * (1 : matrix n n α) j' j) :
@@ -111,42 +147,47 @@ calc finset.univ.sum (λ j',  M i j' * (1 : matrix n n α) j' j)
   ... = M i j :
     by simp
 
-instance [semiring α] : monoid (matrix n n α) :=
+instance : monoid (matrix n n α) :=
 { one_mul := one_mul,
   mul_one := mul_one,
   ..matrix.has_one,
   ..matrix.semigroup }
+
+end monoid
 
 instance [add_group α] : add_group (matrix m n α) :=
 { add_left_neg := λ M, show - M + M = 0, from ext' $ by simp,
   ..matrix.add_monoid,
   ..matrix.has_neg }
 
-theorem left_distrib [add_comm_monoid α] [distrib α] (L M N : matrix n n α) :
-  L * (M + N) = (L * M) + (L * N) :=
+section distrib
+variables [semiring α] -- TODO: How could this be just [add_comm_monoid α] [distrib α] ?
+
+theorem left_distrib (L M N : matrix n n α) : L * (M + N) = (L * M) + (L * N) :=
 ext' $ λ i j,
 calc finset.univ.sum (λ j', L i j' * (M j' j + N j' j))
   = finset.univ.sum (λ j', (λ j', L i j' * M j' j) j' + (λ j', L i j' * N j' j) j') :
     by simp [left_distrib]
   ... = finset.univ.sum (λ j', L i j' * M j' j) + finset.univ.sum (λ j', L i j' * N j' j) :
-    sorry -- @finset.sum_add_distrib (fin n) α finset.univ (λ j', L i j' * M j' j) (λ j', L i j' * N j' j) _
+    finset.sum_add_distrib
 
-theorem right_distrib [add_comm_monoid α] [distrib α] (L M N : matrix n n α) :
-  (L + M) * N = (L * N) + (M * N) :=
+theorem right_distrib (L M N : matrix n n α) : (L + M) * N = (L * N) + (M * N) :=
 ext' $ λ i j,
 calc finset.univ.sum (λ i', (L i i' + M i i') * N i' j)
   = finset.univ.sum (λ i', (λ i', L i i' * N i' j) i' + (λ i', M i i' * N i' j) i') :
     by simp [right_distrib]
   ... = finset.univ.sum (λ i', L i i' * N i' j) + finset.univ.sum (λ i', M i i' * N i' j) :
-    sorry
+    finset.sum_add_distrib
 
-instance [distrib α] [add_comm_monoid α] : distrib (matrix n n α) :=
+instance : distrib (matrix n n α) :=
 { left_distrib := left_distrib,
   right_distrib := right_distrib,
   ..matrix.has_mul,
   ..matrix.has_add }
 
-instance [ring α] : ring (matrix n n α) :=
+end distrib
+
+instance [decidable_eq n] [ring α] : ring (matrix n n α) :=
 { ..matrix.add_comm_monoid,
   ..matrix.monoid,
   ..matrix.add_group,
