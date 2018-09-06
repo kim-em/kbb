@@ -8,19 +8,6 @@ class is_monoid_hom {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α 
 (map_one : f 1 = 1)
 (map_mul : ∀ {x y}, f (x * y) = f x * f y)
 
-definition units.map {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α → β) [is_monoid_hom f] :
-units α → units β :=
-λ u, ⟨f u.val, f u.inv,
-by rw [← is_monoid_hom.map_mul f, u.val_inv, is_monoid_hom.map_one f],
-by rw [← is_monoid_hom.map_mul f, u.inv_val, is_monoid_hom.map_one f] ⟩
-
-instance units.map_is_group_hom {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α → β) [is_monoid_hom f] :
-is_group_hom (units.map f) :=
-⟨λ a b, begin
-ext,
-exact is_monoid_hom.map_mul f,
-end⟩
-
 namespace matrix
 variables {n : Type u} [fintype n] [decidable_eq n] {R : Type v} [ring R]
 
