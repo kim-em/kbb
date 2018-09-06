@@ -1,13 +1,13 @@
 import algebra.big_operators data.set.finite
 
-universe u
+universes u v
 
-def matrix (m n : Type u) [fintype m] [fintype n] (α : Type u) : Type u :=
+def matrix (m n : Type u) [fintype m] [fintype n] (α : Type v) : Type (max u v) :=
 m → n → α
 
 namespace matrix
 variables {l m n o : Type u} [fintype l] [fintype m] [fintype n] [fintype o]
-variables {α : Type u}
+variables {α : Type v}
 
 section ext
 variables {M N : matrix m n α}
