@@ -78,7 +78,7 @@ instance [has_mul α] [add_comm_monoid α] : has_mul (matrix n n α) :=
   (M * N) i k = finset.univ.sum (λ j, M i j * N j k) :=
 rfl
 
-theorem mul_assoc [semiring α] (L : matrix l m α)
+theorem mul_assoc [decidable_eq m] [semiring α] (L : matrix l m α)
   (M : matrix m n α) (N : matrix n o α) : L.mul (M.mul N) = (L.mul M).mul N :=
 funext $ λ i, funext $ λ k,
   calc finset.univ.sum (λ (j₁ : m), L i j₁ * finset.univ.sum (λ (j₂ : n), M j₁ j₂ * N j₂ k))
@@ -89,7 +89,7 @@ funext $ λ i, funext $ λ k,
     ... = finset.univ.sum (λ (j₂ : n), finset.univ.sum (λ (j₁ : m), L i j₁ * M j₁ j₂) * N j₂ k) :
       by congr; funext; rw ←finset.sum_mul
 
-instance [semiring α] : semigroup (matrix n n α) :=
+instance [decidable_eq n] [semiring α] : semigroup (matrix n n α) :=
 { mul_assoc := λ L M N, (mul_assoc L M N).symm,
   ..matrix.has_mul }
 
