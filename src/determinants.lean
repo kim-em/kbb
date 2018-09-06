@@ -22,7 +22,7 @@ exact is_monoid_hom.map_mul f,
 end⟩
 
 namespace matrix
-variables {n : ℕ} {R : Type u} [ring R]
+variables {n : Type u} [fintype n] [decidable_eq n] {R : Type v} [ring R]
 
 definition det : matrix n n R → R := sorry
 
@@ -38,7 +38,7 @@ instance : is_monoid_hom (det : matrix n n R → R) :=
 
 end matrix
 
-def GL (n : ℕ) (R : Type u) [ring R] := units (matrix n n R)
+def GL (n : ℕ) (R : Type u) [ring R] := units (matrix (fin n) (fin n) R)
 
 namespace GL
 
