@@ -1,6 +1,6 @@
 import tactic.ring
 import tactic.tidy
-import .determinants
+import .matrix_groups
 
 @[tidy] meta def tidy_ring := `[ring]
 
