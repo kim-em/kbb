@@ -11,7 +11,7 @@ universes u v
 
 open complex
 
-def upper_half_space := {z : ℂ // z.im > 0}
+def upper_half_space := {z : ℂ | z.im > 0}
 local notation `ℍ` := upper_half_space
 
 instance upper_half_space.to_complex : has_coe ℍ ℂ := ⟨λ z, z.val⟩
@@ -132,6 +132,7 @@ structure is_cusp_form (k : ℕ) (f : ℍ → ℂ) : Prop :=
 lemma is_modular_form_of_is_cusp_form {k : ℕ} (f : ℍ → ℂ) (h : is_cusp_form k f) : is_modular_form k f :=
 ⟨h.1, h.2, ⟨(1 : ℝ), h.3 1 (zero_lt_one) ⟩ ⟩
 
-def Hecke_operator {k : ℕ} (m : ℤ) : modular_forms k → modular_forms k :=
+/- def Hecke_operator {k : ℕ} (m : ℤ) : modular_forms k → modular_forms k :=
 λ f,
 (m^k.pred : ℂ) • (sorry : modular_forms k) -- why is this • failing?
+ -/
