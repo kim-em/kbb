@@ -161,7 +161,7 @@ instance [add_group α] : add_group (matrix m n α) :=
   ..matrix.has_neg }
 
 section distrib
-variables [semiring α] -- TODO: How could this be just [add_comm_monoid α] [distrib α] ?
+variables [semiring α]
 
 theorem left_distrib (L M N : matrix n n α) : L * (M + N) = (L * M) + (L * N) :=
 ext' $ λ i j,
