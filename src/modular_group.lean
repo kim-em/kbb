@@ -1,29 +1,26 @@
 import tactic.ring
 import tactic.tidy
+import group_theory.group_action
 import .matrix_groups
 
 @[tidy] meta def tidy_ring := `[ring]
 
-structure SL2Z :=
+structure integral_matrices_with_determinant (m : ℤ) :=
 (a b c d : ℤ)
-(det : a * d - b * c = 1)
+(det : a * d - b * c = m)
+
+def SL2Z := integral_matrices_with_determinant 1
 
 instance : group SL2Z := sorry
 
--- lemma one_one : (1 : ℤ) * 1 = 1 := by simp
+def SL2Z_M_ (m : ℤ) : SL2Z → integral_matrices_with_determinant m → integral_matrices_with_determinant m :=
+λ X Y, {  a := X.a * Y.a + X.b * Y.c,
+          b := X.a * Y.b + X.b * Y.d,
+          c := X.c * Y.a + X.d * Y.c,
+          d := X.c * Y.b + X.d * Y.d,
+          det := begin
+            conv { to_rhs, rw ← one_mul m, congr, rw ← X.det, skip, rw ← Y.det }, 
+            ring
+          end }
 
--- instance : group SL2Z :=
--- begin refine
--- { one := { a := 1, b := 0, c := 0, d := 1, det := by ring },
---   mul := λ X Y, { a := X.a * Y.a + X.b * Y.c,
---                   b := X.a * Y.b + X.b * Y.d,
---                   c := X.c * Y.a + X.d * Y.c,
---                   d := X.c * Y.b + X.d * Y.d,
---                   det := begin 
---                            conv { to_rhs, rw ← one_one, congr, rw ← X.det, skip, rw ← Y.det, }, 
---                            ring 
---                          end },
---   inv := λ X, { a := X.d, b := - X.c, c := - X.b, d := X.a, det := begin rw ← X.det, ring end },
---   ..
--- } ; tidy
--- end
+instance (m : ℤ) : is_group_action (SL2Z_M_ m) := sorry

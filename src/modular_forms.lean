@@ -3,6 +3,7 @@ import data.complex.basic
 import group_theory.group_action
 import algebra.module
 import algebra.pi_instances
+import linear_algebra.subtype_module
 import .modular_group
 import .holomorphic_functions
 
@@ -119,3 +120,18 @@ instance (k : ℕ) : is_submodule (modular_forms k) :=
       simp,
       apply mul_le_mul_of_nonneg_left (hAM z hz) (complex.abs_nonneg c) }
   end }
+
+-- I would like to remove this line. But I can't...
+noncomputable instance {k : ℕ} : module ℂ (modular_forms k) := subtype.module
+
+structure is_cusp_form (k : ℕ) (f : ℍ → ℂ) : Prop :=
+(hol      : is_holomorphic f)
+(transf   : ∀ M : SL2Z, ∀ z : ℍ, f (SL2Z_H M z) = (M.c*z + M.d)^k * f z)
+(infinity : ∀ ε : ℝ, ε > 0 → ∃ A : ℝ, ∀ z : ℍ, im z ≥ A → abs (f z) ≤ ε)
+
+lemma is_modular_form_of_is_cusp_form {k : ℕ} (f : ℍ → ℂ) (h : is_cusp_form k f) : is_modular_form k f :=
+⟨h.1, h.2, ⟨(1 : ℝ), h.3 1 (zero_lt_one) ⟩ ⟩
+
+def Hecke_operator {k : ℕ} (m : ℤ) : modular_forms k → modular_forms k :=
+λ f,
+(m^k.pred : ℂ) • (sorry : modular_forms k) -- why is this • failing?
