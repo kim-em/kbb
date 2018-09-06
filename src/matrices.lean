@@ -161,7 +161,7 @@ instance [add_group α] : add_group (matrix m n α) :=
   ..matrix.has_neg }
 
 section distrib
-variables [add_comm_monoid α] [distrib α]
+variables [semiring α] -- TODO: How could this be just [add_comm_monoid α] [distrib α] ?
 
 theorem left_distrib (L M N : matrix n n α) : L * (M + N) = (L * M) + (L * N) :=
 ext' $ λ i j,
@@ -169,7 +169,7 @@ calc finset.univ.sum (λ j', L i j' * (M j' j + N j' j))
   = finset.univ.sum (λ j', (λ j', L i j' * M j' j) j' + (λ j', L i j' * N j' j) j') :
     by simp [left_distrib]
   ... = finset.univ.sum (λ j', L i j' * M j' j) + finset.univ.sum (λ j', L i j' * N j' j) :
-    sorry -- @finset.sum_add_distrib (fin n) α finset.univ (λ j', L i j' * M j' j) (λ j', L i j' * N j' j) _
+    finset.sum_add_distrib
 
 theorem right_distrib (L M N : matrix n n α) : (L + M) * N = (L * N) + (M * N) :=
 ext' $ λ i j,
@@ -177,7 +177,7 @@ calc finset.univ.sum (λ i', (L i i' + M i i') * N i' j)
   = finset.univ.sum (λ i', (λ i', L i i' * N i' j) i' + (λ i', M i i' * N i' j) i') :
     by simp [right_distrib]
   ... = finset.univ.sum (λ i', L i i' * N i' j) + finset.univ.sum (λ i', M i i' * N i' j) :
-    sorry
+    finset.sum_add_distrib
 
 instance : distrib (matrix n n α) :=
 { left_distrib := left_distrib,
