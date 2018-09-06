@@ -1,8 +1,12 @@
 import tactic.ring
 import data.complex.basic
 import group_theory.group_action
+import algebra.module
+import algebra.pi_instances
 import .modular_group
 import .holomorphic_functions
+
+universes u v
 
 open complex
 
@@ -57,3 +61,61 @@ structure is_modular_form (k : ℕ) (f : ℍ → ℂ) : Prop :=
 (hol      : is_holomorphic f)
 (transf   : ∀ M : SL2Z, ∀ z : ℍ, f (SL2Z_H M z) = (M.c*z + M.d)^k * f z)
 (infinity : ∃ (M A : ℝ), ∀ z : ℍ, im z ≥ A → abs (f z) ≤ M)
+
+def modular_forms (k : ℕ) := {f : ℍ → ℂ | is_modular_form k f}
+
+-- I would like to remove the following line... but I can't
+instance foobar (X : Type u) (R : Type v) [ring R] : module R (X → R) := pi.module
+
+instance (k : ℕ) : is_submodule (modular_forms k) :=
+{ zero_ := begin
+    fsplit,
+    { sorry },
+    { intros M z,
+      simp },
+    { existsi (0 : ℝ),
+      existsi (0 : ℝ),
+      intros,
+      simp }
+  end,
+  add_  := begin
+    intros f g hf hg,
+    fsplit,
+    { sorry },
+    { intros M z,
+      suffices : f (SL2Z_H M z) + g (SL2Z_H M z) = (↑(M.c) * ↑z + ↑(M.d)) ^ k * (f z + g z),
+        by simp at *; assumption,
+      rw [hf.transf, hg.transf],
+      ring },
+    { cases hf.infinity with Mf hMf,
+      cases hg.infinity with Mg hMg,
+      cases hMf with Af hAMf,
+      cases hMg with Ag hAMg,
+      existsi (Mf + Mg),
+      existsi (max Af Ag),
+      intros z hz,
+      simp,
+      apply le_trans (complex.abs_add _ _),
+      apply add_le_add,
+      { refine hAMf z _,
+        exact le_trans (le_max_left _ _) hz },
+      { refine hAMg z _,
+        exact le_trans (le_max_right _ _) hz } }
+  end,
+  smul  := begin
+    intros c f hyp,
+    fsplit,
+    { sorry },
+    { intros M z,
+      suffices : c * f (SL2Z_H M z) = (↑(M.c) * ↑z + ↑(M.d)) ^ k * (c * f z),
+        by simp at *; assumption,
+      rw hyp.transf M z,
+      ring },
+    { cases hyp.infinity with M hM,
+      cases hM with A hAM,
+      existsi (abs c * M),
+      existsi A,
+      intros z hz,
+      simp,
+      apply mul_le_mul_of_nonneg_left (hAM z hz) (complex.abs_nonneg c) }
+  end }
