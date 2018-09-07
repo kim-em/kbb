@@ -6,6 +6,8 @@ import analysis.normed_space
 local attribute [instance] classical.prop_decidable
 noncomputable theory
 
+universes u v
+
 open filter complex
 
 def has_complex_derivative_at
@@ -54,9 +56,14 @@ begin
   simp [this, tendsto_const_nhds]
 end
 
-/- instance complex_fun_module : module ℂ (domain → ℂ) := sorry
+-- instance complex_fun_module : module ℂ (domain → ℂ) := sorry
 
-instance hol_submodule : @is_submodule ℂ _ _ _ {f : domain → ℂ | is_holomorphic f} :=
+-- I would like to remove the following line... but I can't
+instance foobar (X : Type u) (R : Type v) [ring R] : module R (X → R) := pi.module
+
+instance hol_submodule : is_submodule {f : domain → ℂ | is_holomorphic f} := sorry
+
+/-
 { zero_ := zero_hol,
   add_  := begin
     intros f g f_hol g_hol,
