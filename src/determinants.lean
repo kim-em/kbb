@@ -93,22 +93,33 @@ by simp [scalar, fintype.card]
 lemma zero_pow {n : ℕ} : 0 < n → (0 : R) ^ n = 0 :=
 by cases n; simp [_root_.pow_succ, lt_irrefl]
 
--- Useful lemma by Kenny
-@[simp] lemma card_nonempty (h : nonempty n) : 0 < fintype.card n :=
-begin
-  by_contra H,
-  rw [not_lt, nat.le_zero_iff, fintype.card_eq_zero_iff] at H,
-  exact h.rec_on H
-end
-
 @[simp] lemma det_zero (h : nonempty n) : det (0 : matrix n n R) = (0 : R) :=
-by rw ← scalar_zero; simp [-scalar_zero, zero_pow, h]
+by rw ← scalar_zero; simp [-scalar_zero, zero_pow, fintype.card_pos_iff.mpr h]
 
 @[simp] lemma det_one : det (1 : matrix n n R) = (1 : R) :=
 by rw ← scalar_one; simp [-scalar_one]
 
+set_option trace.simplify.rewrite true
+
 @[simp] lemma det_mul (M : matrix n n R) (N : matrix n n R) :
-det (M * N) = det M * det N := sorry
+det (M * N) = det M * det N :=
+begin
+  simp [det],
+  conv {
+    to_lhs,
+    simp [finset.prod_sum, finset.prod_mul_distrib, finset.mul_sum],
+    rw finset.sum_comm,
+    congr, skip, funext,
+    simp only [mul_comm],
+    simp only [mul_comm (e _) _ ],
+    simp only [_root_.mul_assoc _ _ (e _)],
+    rw ← finset.mul_sum,
+    simp only [mul_comm (_) (e _)],
+  },
+  -- trying to follow the argument outlined in
+  -- https://math.stackexchange.com/questions/177560/proving-determinant-product-rule-combinatorially
+  sorry
+end
 
 instance : is_monoid_hom (det : matrix n n R → R) :=
 { map_one := det_one,
