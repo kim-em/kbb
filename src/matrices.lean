@@ -213,21 +213,56 @@ instance [decidable_eq n] [ring α] : ring (matrix n n α) :=
   ..matrix.distrib }
 
 section diagonal
-variables [decidable_eq n] [has_zero α]
+variables [decidable_eq n]
 
-def diagonal (d : n → α) : matrix n n α := λ i j, if i = j then d i else 0
+def diagonal [has_zero α] (d : n → α) : matrix n n α := λ i j, if i = j then d i else 0
 
-@[simp] theorem diagonal_val_eq {d : n → α} {i : n} : (diagonal d) i i = d i :=
+@[simp] theorem diagonal_val_eq  [has_zero α] {d : n → α} {i : n} : (diagonal d) i i = d i :=
 by simp [diagonal]
 
-@[simp] theorem diagonal_val_ne {d : n → α} {i j : n} (h : i ≠ j) :
+@[simp] theorem diagonal_val_ne  [has_zero α] {d : n → α} {i j : n} (h : i ≠ j) :
 (diagonal d) i j = 0 := by simp [diagonal, h]
 
-@[simp] theorem diagonal_zero : (diagonal (λ _, 0) : matrix n n α) = 0 :=
+@[simp] theorem diagonal_zero [has_zero α] : (diagonal (λ _, 0) : matrix n n α) = 0 :=
 by simp [diagonal]; refl
 
-@[simp] theorem diagonal_one [has_one α] : (diagonal (λ _, 1) : matrix n n α) = 1 :=
+@[simp] theorem diagonal_one [has_zero α] [has_one α] : (diagonal (λ _, 1) : matrix n n α) = 1 :=
 by simp [diagonal]; refl
+
+@[simp] lemma ite_mul [ring α] (P Q : Prop) [decidable P] [decidable Q] (a b : α) : 
+  (ite P a 0) * (ite Q b 0) = ite (P ∧ Q) (a * b) 0 :=
+sorry
+
+@[simp] lemma eq_and_eq_symm {α : Type u} (a b : α) : (a = b ∧ b = a) ↔ a = b :=
+by tidy
+
+@[simp] lemma this_lemma_has_a_canonical_name {α : Type u} {a b c : α} (p : a ≠ c) : (a = b ∧ b = c) ↔ false :=
+sorry
+
+@[simp] theorem diagonal_mul [ring α] {d₁ d₂ : n → α} : 
+  (diagonal d₁) * (diagonal d₂) = (diagonal (λ i, d₁ i * d₂ i)) :=
+begin
+  tidy,
+  dsimp [diagonal],
+  split_ifs,
+  { subst h,
+    simp, 
+    -- hmm, need a theorem about the sum of a delta function
+    sorry },
+  { simp,
+    -- motive is not type correct!
+    -- conv { congr, congr, skip, funext, rw this_lemma_has_a_canonical_name h },
+    sorry }
+end
+
+@[simp] theorem diagonal_add [ring α] {d₁ d₂ : n → α} : 
+  (diagonal d₁) + (diagonal d₂) = (diagonal (λ i, d₁ i + d₂ i)) :=
+begin
+  tidy,
+  dsimp [diagonal],
+  split_ifs,
+  tidy, -- TODO tidy should try split_ifs!
+end
 
 end diagonal
 
