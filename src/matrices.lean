@@ -158,16 +158,14 @@ end monoid
 
 section free_module
 
-def free_module (α : Type v) [R : semiring α] : Type (u+1) := Σ n : Type u, fintype n × decidable_eq n
+def free_module (α : Type v) [R : semiring α] : Type := ℕ
 
 variables [semiring α]
-instance (M : free_module α) : fintype M.1 := M.2.1
-instance (M : free_module α) : decidable_eq M.1 := M.2.2
 
 open category_theory
 
 instance : category (free_module α) :=
-{ hom  := λ m n, matrix m.1 n.1 α,
+{ hom  := λ m n, matrix (fin m) (fin n) α,
   id   := λ m, 1,
   comp := λ _ _ _ M N, M.mul N,
   comp_id' := λ _ _ M, mul_one M,
