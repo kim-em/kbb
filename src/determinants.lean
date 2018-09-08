@@ -93,12 +93,16 @@ by simp [scalar, fintype.card]
 lemma zero_pow {n : ℕ} : 0 < n → (0 : R) ^ n = 0 :=
 by cases n; simp [_root_.pow_succ, lt_irrefl]
 
-@[simp] lemma det_zero (h : nonempty n) : det (0 : matrix n n R) = (0 : R) :=
+-- Useful lemma by Kenny
+@[simp] lemma card_nonempty (h : nonempty n) : 0 < fintype.card n :=
 begin
-  rw [← scalar_zero, det_scalar],
-  refine zero_pow _,
-  sorry
+  by_contra H,
+  rw [not_lt, nat.le_zero_iff, fintype.card_eq_zero_iff] at H,
+  exact h.rec_on H
 end
+
+@[simp] lemma det_zero (h : nonempty n) : det (0 : matrix n n R) = (0 : R) :=
+by rw ← scalar_zero; simp [-scalar_zero, zero_pow, h]
 
 @[simp] lemma det_one : det (1 : matrix n n R) = (1 : R) :=
 by rw ← scalar_one; simp [-scalar_one]
