@@ -236,8 +236,6 @@ sorry
 @[simp] lemma eq_and_eq_symm {α : Type u} (a b : α) : (a = b ∧ b = a) ↔ a = b :=
 by tidy
 
-@[simp] lemma this_lemma_has_a_canonical_name {α : Type u} {a b c : α} (p : a ≠ c) : (a = b ∧ b = c) ↔ false :=
-sorry
 section
 variables {β : Type v} [add_comm_monoid β]
 
