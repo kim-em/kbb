@@ -214,4 +214,40 @@ instance [decidable_eq n] [ring α] : ring (matrix n n α) :=
   ..matrix.add_group,
   ..matrix.distrib }
 
+section diagonal
+variables [decidable_eq n] [has_zero α]
+
+def diagonal (d : n → α) : matrix n n α := λ i j, if i = j then d i else 0
+
+@[simp] theorem diagonal_val_eq {d : n → α} {i : n} : (diagonal d) i i = d i :=
+by simp [diagonal]
+
+@[simp] theorem diagonal_val_ne {d : n → α} {i j : n} (h : i ≠ j) :
+(diagonal d) i j = 0 := by simp [diagonal, h]
+
+@[simp] theorem diagonal_zero : (diagonal (λ _, 0) : matrix n n α) = 0 :=
+by simp [diagonal]; refl
+
+@[simp] theorem diagonal_one [has_one α] : (diagonal (λ _, 1) : matrix n n α) = 1 :=
+by simp [diagonal]; refl
+
+end diagonal
+
+section scalar
+variables [decidable_eq n] [has_zero α]
+
+def scalar (a : α) : matrix n n α := diagonal (λ _, a)
+
+@[simp] theorem scalar_val_eq {a : α} {i : n} : (scalar a) i i = a :=
+by simp [scalar]
+
+@[simp] theorem scalar_val_ne {a : α} {i j : n} (h : i ≠ j) :
+(scalar a) i j = 0 := by simp [scalar, h]
+
+@[simp] theorem scalar_zero : (scalar 0 : matrix n n α) = 0 := by simp [scalar]
+
+@[simp] theorem scalar_one  [has_one α] : (scalar 1 : matrix n n α) = 1 := by simp [scalar]
+
+end scalar
+
 end matrix
