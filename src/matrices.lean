@@ -238,6 +238,14 @@ by tidy
 
 @[simp] lemma this_lemma_has_a_canonical_name {α : Type u} {a b c : α} (p : a ≠ c) : (a = b ∧ b = c) ↔ false :=
 sorry
+section
+variables {β : Type v} [add_comm_monoid β]
+
+@[simp] lemma finset.sum_ite (s : finset α) (P : α → Prop) [decidable_pred P] (f₁ f₂ : α → β) :
+  finset.sum s (λ a, ite (P a) (f₁ a) (f₂ a)) =
+  finset.sum (s.filter P) f₁ + finset.sum (s.filter (λ a, ¬ P a)) f₂ :=
+sorry
+end
 
 @[simp] theorem diagonal_mul [ring α] {d₁ d₂ : n → α} : 
   (diagonal d₁) * (diagonal d₂) = (diagonal (λ i, d₁ i * d₂ i)) :=
@@ -246,8 +254,8 @@ begin
   dsimp [diagonal],
   split_ifs,
   { subst h,
-    simp, 
-    -- hmm, need a theorem about the sum of a delta function
+    simp,
+    -- hmm, need a theorem about finset.sum of an ite.
     sorry },
   { simp,
     -- motive is not type correct!
