@@ -108,7 +108,7 @@ rfl
 section semigroup
 variables [decidable_eq m] [decidable_eq n] [semiring α]
 
-theorem mul_assoc (L : matrix l m α) (M : matrix m n α) (N : matrix n o α) :
+protected theorem mul_assoc (L : matrix l m α) (M : matrix m n α) (N : matrix n o α) :
   L.mul (M.mul N) = (L.mul M).mul N :=
 funext $ λ i, funext $ λ k,
   calc finset.univ.sum (λ (j₁ : m), L i j₁ * finset.univ.sum (λ (j₂ : n), M j₁ j₂ * N j₂ k))
@@ -120,7 +120,7 @@ funext $ λ i, funext $ λ k,
       by congr; funext; rw ←finset.sum_mul
 
 instance : semigroup (matrix n n α) :=
-{ mul_assoc := λ L M N, (mul_assoc L M N).symm,
+{ mul_assoc := λ L M N, (matrix.mul_assoc L M N).symm,
   ..matrix.has_mul }
 
 end semigroup
@@ -128,7 +128,7 @@ end semigroup
 section monoid
 variables [decidable_eq n] [decidable_eq m] [semiring α]
 
-theorem one_mul (M : matrix n m α) : (1 : matrix n n α).mul M = M :=
+protected theorem one_mul (M : matrix n m α) : (1 : matrix n n α).mul M = M :=
 ext' $ λ i j,
 have h : ∀ (j' : n), j' ∈ (finset.univ : finset n) → j' ∉ finset.singleton i → (1 : matrix n n α) i j' * M j' j = 0 :=
   λ j' h₁ h₂, by simp at h₂; simp [ne.symm h₂],
@@ -138,7 +138,7 @@ calc finset.univ.sum (λ i', (1 : matrix n n α) i i' * M i' j)
   ... = M i j :
     by simp
 
-theorem mul_one (M : matrix n m α) : M.mul (1 : matrix m m α) = M :=
+protected theorem mul_one (M : matrix n m α) : M.mul (1 : matrix m m α) = M :=
 ext' $ λ i j,
 have h : ∀ (j' : m), j' ∈ (finset.univ : finset m) → j' ∉ finset.singleton j → M i j' * (1 : matrix m m α) j' j = 0 :=
   λ j' h₁ h₂, by simp at h₂; simp [h₂],
@@ -149,8 +149,8 @@ calc finset.univ.sum (λ j',  M i j' * (1 : matrix m m α) j' j)
     by simp
 
 instance : monoid (matrix n n α) :=
-{ one_mul := one_mul,
-  mul_one := mul_one,
+{ one_mul := matrix.one_mul,
+  mul_one := matrix.mul_one,
   ..matrix.has_one,
   ..matrix.semigroup }
 
@@ -168,9 +168,9 @@ instance : category (free_module α) :=
 { hom  := λ m n, matrix (fin m) (fin n) α,
   id   := λ m, 1,
   comp := λ _ _ _ M N, M.mul N,
-  comp_id' := λ _ _ M, mul_one M,
-  id_comp' := λ _ _ M, one_mul M,
-  assoc'   := λ _ _ _ _ L M N, (mul_assoc L M N).symm }
+  comp_id' := λ _ _ M, matrix.mul_one M,
+  id_comp' := λ _ _ M, matrix.one_mul M,
+  assoc'   := λ _ _ _ _ L M N, (matrix.mul_assoc L M N).symm }
 
 end free_module
 

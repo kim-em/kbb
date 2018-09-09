@@ -43,4 +43,8 @@ def SL2Z_M_ (m : ℤ) : SL2Z → integral_matrices_with_determinant m → integr
             ring
           end }
 
-instance (m : ℤ) : is_group_action (SL2Z_M_ m) := sorry
+instance (m : ℤ) : is_group_action (SL2Z_M_ m) :=
+{ mul := λ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩, by ext;
+    change (_ + _) * _ + (_ + _) * _ = _; dsimp [SL2Z_M_]; ring,
+  one := λ ⟨_, _, _, _, _⟩, by ext;
+    try {change (1:ℤ) * _ + 0 * _ = _ <|> change (0:ℤ) * _ + 1 * _ = _}; simp, }
