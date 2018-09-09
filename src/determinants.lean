@@ -36,54 +36,31 @@ end
 
 def e (σ : equiv.perm n) : R := ((equiv.perm.sign σ : ℤ) : R)
 
+@[simp] lemma e_mul (σ τ : equiv.perm n) : (e (σ * τ) : R) = e σ * e τ :=
+by unfold e; rw ← int.cast_mul; congr; rw ← units.mul_coe; congr; apply is_group_hom.mul
+
+@[simp] lemma e_one : (e (1 : equiv.perm n) : R) = 1 :=
+by unfold e; rw is_group_hom.one equiv.perm.sign; simp <|> apply_instance
+
 definition det (M : matrix n n R) : R :=
 finset.univ.sum (λ (σ : equiv.perm n),
 (e σ) * finset.univ.prod (λ (i:n), M (σ i) i))
 
 @[simp] lemma det_diagonal {d : n → R} : det (diagonal d) = finset.univ.prod d :=
 begin
-  have H : ∀ σ : equiv.perm n,
-    finset.univ.prod (λ i : n, diagonal d (σ i) i) =
-    ite (σ = 1) (finset.univ.prod d) 0,
-  begin
-    intro σ,
-    split_ifs,
-    { apply finset.prod_congr rfl,
-      intros i hi,
-      rw [h],
-      simp },
-    { have : ∃ i : n, σ.to_fun i ≠ i :=
-      begin
-        by_contra,
-        simp at a,
-        suffices : σ = 1,
-        exact h this,
-        apply equiv.ext,
-        simp [a],
-        exact a
-      end,
-      cases this with i hi,
-      rw ← @finset.prod_sdiff _ _ (singleton i),
-      tidy,
-      rw show finset.prod {i} (λ (i : n), diagonal d (σ i) i) = 0,
-      begin
-        change (σ i) ≠ i at hi,
-        simp [hi]
-      end,
-      simp }
-  end,
-  simp [det, H], clear H,
-  transitivity finset.sum (finset.singleton 1 : finset (equiv.perm n)) _,
+  transitivity finset.sum (finset.singleton (1 : equiv.perm n)) _,
   { symmetry,
-    apply finset.sum_subset,
-    { intros i H, simp },
-    { intros, simp at a, split_ifs,
-      { exfalso, exact a h },
-      { simp } } },
-  simp [e],
-  rw is_group_hom.one equiv.perm.sign,
-  simp,
-  apply_instance
+    apply finset.sum_subset (finset.subset_univ _),
+    intros σ h1 h2,
+    simp at h2,
+    have h3 := mt (equiv.ext _ _) h2,
+    simp [not_forall] at h3,
+    cases h3 with x h3,
+    convert mul_zero _,
+    apply finset.prod_eq_zero,
+    { change x ∈ _, simp },
+    simp [diagonal, h3] },
+  simp
 end
 
 @[simp] lemma det_scalar {r : R} : det (scalar r : matrix n n R) = r^(fintype.card n) :=
@@ -99,7 +76,7 @@ by rw ← scalar_zero; simp [-scalar_zero, zero_pow, fintype.card_pos_iff.mpr h]
 @[simp] lemma det_one : det (1 : matrix n n R) = (1 : R) :=
 by rw ← scalar_one; simp [-scalar_one]
 
-set_option trace.simplify.rewrite true
+--set_option trace.simplify.rewrite true
 
 @[simp] lemma det_mul (M : matrix n n R) (N : matrix n n R) :
 det (M * N) = det M * det N :=

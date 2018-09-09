@@ -231,34 +231,29 @@ by simp [diagonal]; refl
 
 @[simp] lemma ite_mul [ring α] (P Q : Prop) [decidable P] [decidable Q] (a b : α) : 
   (ite P a 0) * (ite Q b 0) = ite (P ∧ Q) (a * b) 0 :=
-sorry
+by split_ifs; cc <|> simp
 
 @[simp] lemma eq_and_eq_symm {α : Type u} (a b : α) : (a = b ∧ b = a) ↔ a = b :=
 by tidy
 
-section
-variables {β : Type v} [add_comm_monoid β]
-
-@[simp] lemma finset.sum_ite (s : finset α) (P : α → Prop) [decidable_pred P] (f₁ f₂ : α → β) :
-  finset.sum s (λ a, ite (P a) (f₁ a) (f₂ a)) =
-  finset.sum (s.filter P) f₁ + finset.sum (s.filter (λ a, ¬ P a)) f₂ :=
-sorry
-end
-
 @[simp] theorem diagonal_mul [ring α] {d₁ d₂ : n → α} : 
   (diagonal d₁) * (diagonal d₂) = (diagonal (λ i, d₁ i * d₂ i)) :=
 begin
-  tidy,
+  funext i j,
   dsimp [diagonal],
   split_ifs,
   { subst h,
-    simp,
-    -- hmm, need a theorem about finset.sum of an ite.
-    sorry },
-  { simp,
-    -- motive is not type correct!
-    -- conv { congr, congr, skip, funext, rw this_lemma_has_a_canonical_name h },
-    sorry }
+    transitivity finset.sum (finset.singleton i) _,
+    { symmetry,
+      apply finset.sum_subset,
+      { intros _ _, simp },
+      intros j h1 h2,
+      simp at h2,
+      simp [h2] },
+    simp },
+  { convert finset.sum_const_zero,
+    ext k,
+    split_ifs; cc <|> simp }
 end
 
 @[simp] theorem diagonal_add [ring α] {d₁ d₂ : n → α} : 
