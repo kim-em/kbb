@@ -20,4 +20,4 @@ instance : is_group_hom (det : GL n R → units R) := by unfold det; apply_insta
 
 end GL
 
-def SL (n : ℕ) (R : Type u) [ring R] := is_group_hom.ker (GL.det : GL n R → units R)
+def SL (n : ℕ) (R : Type u) [comm_ring R] := is_group_hom.ker (GL.det : GL n R → units R)
