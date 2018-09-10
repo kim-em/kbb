@@ -60,14 +60,20 @@ instance : is_subring {f : domain → ℂ | is_holomorphic f} :=
 }-/
 
 lemma const_hol (domain_open : is_open domain) (c : ℂ) : is_holomorphic (λ z : domain, (c : ℂ)) :=
-begin
-  intro z₀,
-  existsi (0 : ℂ),
-  dsimp [has_complex_derivative_at],
-  dsimp [extend_by_zero],
-  simp,
-  sorry
-end
+λ z₀, ⟨(0 : ℂ), tendsto_nhds (λ S h0 hS, begin
+  rw nhds_sets,
+  existsi {h : ℂ | ↑z₀ + h ∈ domain},
+  split,
+  { intros h H,
+    dsimp [extend_by_zero],
+    rwa show abs
+      ((dite (↑z₀ + h ∈ domain) (λ (h : ↑z₀ + h ∈ domain), c) (λ (h : ↑z₀ + h ∉ domain), 0) +
+            -(dite (↑z₀ ∈ domain) (λ (h : ↑z₀ ∈ domain), c) (λ (h : ↑z₀ ∉ domain), 0) + 0 * h)) /
+         h) = 0,
+    by erw [complex.abs_eq_zero, dif_pos H, dif_pos z₀.property]; ring },
+  { exact ⟨continuous_add continuous_const continuous_id domain domain_open,
+    by simpa using z₀.property⟩ }
+end)⟩
 
 lemma zero_hol : is_holomorphic (λ z : domain, (0 : ℂ)) :=
 begin
