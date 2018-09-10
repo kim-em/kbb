@@ -33,6 +33,19 @@ instance : group SL2Z :=
   inv := λ A, ⟨A.d, -A.b, -A.c, A.a, by simpa [mul_comm] using A.det⟩,
   mul_left_inv := λ A, by cases A; ext; change _ + _ = _; simp at A_det; simp [mul_comm, A_det]; refl }
 
+@[simp] lemma SL2Z_mul_a (A B : SL2Z) : (A * B).a = A.a * B.a + A.b * B.c := rfl
+@[simp] lemma SL2Z_mul_b (A B : SL2Z) : (A * B).b = A.a * B.b + A.b * B.d := rfl
+@[simp] lemma SL2Z_mul_c (A B : SL2Z) : (A * B).c = A.c * B.a + A.d * B.c := rfl
+@[simp] lemma SL2Z_mul_d (A B : SL2Z) : (A * B).d = A.c * B.b + A.d * B.d := rfl
+@[simp] lemma SL2Z_one_a : (1 : SL2Z).a = 1 := rfl
+@[simp] lemma SL2Z_one_b : (1 : SL2Z).b = 0 := rfl
+@[simp] lemma SL2Z_one_c : (1 : SL2Z).c = 0 := rfl
+@[simp] lemma SL2Z_one_d : (1 : SL2Z).d = 1 := rfl
+@[simp] lemma SL2Z_inv_a (A : SL2Z) : (A⁻¹).a = A.d := rfl
+@[simp] lemma SL2Z_inv_b (A : SL2Z) : (A⁻¹).b = -A.b := rfl
+@[simp] lemma SL2Z_inv_c (A : SL2Z) : (A⁻¹).c = -A.c := rfl
+@[simp] lemma SL2Z_inv_d (A : SL2Z) : (A⁻¹).d = A.a := rfl
+
 def SL2Z_M_ (m : ℤ) : SL2Z → integral_matrices_with_determinant m → integral_matrices_with_determinant m :=
 λ X Y, {  a := X.a * Y.a + X.b * Y.c,
           b := X.a * Y.b + X.b * Y.d,
@@ -44,7 +57,6 @@ def SL2Z_M_ (m : ℤ) : SL2Z → integral_matrices_with_determinant m → integr
           end }
 
 instance (m : ℤ) : is_group_action (SL2Z_M_ m) :=
-{ mul := λ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩, by ext;
-    change (_ + _) * _ + (_ + _) * _ = _; dsimp [SL2Z_M_]; ring,
-  one := λ ⟨_, _, _, _, _⟩, by ext;
-    try {change (1:ℤ) * _ + 0 * _ = _ <|> change (0:ℤ) * _ + 1 * _ = _}; simp, }
+{ mul := λ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩,
+    by ext; simp [SL2Z_M_, add_mul, mul_add, mul_assoc],
+  one := λ ⟨_, _, _, _, _⟩, by ext; simp [SL2Z_M_], }
