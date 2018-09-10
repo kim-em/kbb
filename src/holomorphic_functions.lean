@@ -21,20 +21,27 @@ let error_term (h : ℂ) : ℝ :=
 section
 variables  {α : Type*} {β : Type*} {s : set α}
 
+-- I would like to remove the following line... but I can't
+instance foobar (X : Type u) (R : Type v) [ring R] : module R (X → R) := pi.module
+
 def extend_by_zero [has_zero β] (f : s → β) : α → β :=
 λ z, if h : z ∈ s then f ⟨z, h⟩ else 0
 
 lemma extend_by_zero_add [add_group β] (f g : s → β) :
 extend_by_zero (f + g) = extend_by_zero f + extend_by_zero g :=
-by ext z ; by_cases h : z ∈ s ; simp [extend_by_zero, h]
+by ext z; by_cases h : z ∈ s; simp [extend_by_zero, h]
 
 lemma extend_by_zero_mul [semiring β] (f g : s → β) :
 extend_by_zero (f * g) = extend_by_zero f * extend_by_zero g :=
-by ext z ; by_cases h : z ∈ s ; simp [extend_by_zero, h]
+by ext z; by_cases h : z ∈ s; simp [extend_by_zero, h]
 
 lemma extend_by_zero_neg [add_group β] (f : s → β) :
 extend_by_zero (-f) = -extend_by_zero f :=
-by ext z ; by_cases h : z ∈ s ; simp [extend_by_zero, h]
+by ext z; by_cases h : z ∈ s; simp [extend_by_zero, h]
+
+lemma extend_by_zero_smul [ring β] (c : β) (f : s → β) :
+extend_by_zero (c • f) = c • extend_by_zero f :=
+by ext z; by_cases h : z ∈ s; simp [extend_by_zero, h]
 
 end
 
@@ -57,6 +64,7 @@ begin
   intro z₀,
   existsi (0 : ℂ),
   dsimp [has_complex_derivative_at],
+  dsimp [extend_by_zero],
   simp,
   sorry
 end
@@ -94,6 +102,23 @@ begin
     ring }
 end
 
+lemma mul_hol (f g : domain → ℂ) (f_hol : is_holomorphic f) (g_hol : is_holomorphic g) : is_holomorphic (f * g) :=
+begin
+  intro z₀,
+  cases f_hol z₀ with f'z₀ Hf,
+  cases g_hol z₀ with g'z₀ Hg,
+  existsi (f'z₀ + g'z₀),
+  rw extend_by_zero_mul,
+  have Hfg : tendsto (λ (h : ℂ), abs ((extend_by_zero f (↑z₀ + h) - (extend_by_zero f ↑z₀ + f'z₀ * h)) / h) *
+         abs ((extend_by_zero g (↑z₀ + h) - (extend_by_zero g ↑z₀ + g'z₀ * h)) / h)) (nhds 0) (nhds 0) :=
+  by simpa using tendsto_mul Hf Hg,
+  refine squeeze_zero _ _ Hfg,
+  { intro h, apply complex.abs_nonneg },
+  { intro h,
+    rw ← complex.abs_mul,
+    sorry }
+end
+
 lemma neg_hol (f : domain → ℂ) (f_hol : is_holomorphic f) : is_holomorphic (-f) :=
 begin
   intro z₀,
@@ -107,38 +132,31 @@ begin
   exact H
 end
 
--- instance complex_fun_module : module ℂ (domain → ℂ) := sorry
+instance xyzzy {F : Type u} [normed_field F] : normed_space F F :=
+{ dist_eq := normed_field.dist_eq,
+  norm_smul := normed_field.norm_mul }
 
--- I would like to remove the following line... but I can't
-instance foobar (X : Type u) (R : Type v) [ring R] : module R (X → R) := pi.module
+lemma smul_hol (c : ℂ) (f : domain → ℂ) (f_hol : is_holomorphic f) : is_holomorphic (c • f) :=
+begin
+  intro z₀,
+  cases f_hol z₀ with f'z₀ H,
+  existsi c * f'z₀,
+  rw extend_by_zero_smul,
+  dsimp only [has_complex_derivative_at] at ⊢ H,
+  have H' := @tendsto_smul _ _ _ _ _ (λ x : ℂ, abs c) _ (nhds (0 : ℂ)) (abs c) (0 : ℝ) tendsto_const_nhds H,
+  simp at ⊢ H',
+  suffices :   tendsto
+    (λ (x : ℂ), abs c * (abs (-(f'z₀ * x) + (extend_by_zero f (x + ↑z₀) + -extend_by_zero f ↑z₀)) / abs x))
+    (nhds 0) (nhds 0)
+    = tendsto
+    (λ (h : ℂ),
+       abs (-(c * f'z₀ * h) + (c * extend_by_zero f (h + ↑z₀) + -(c * extend_by_zero f ↑z₀))) / abs h)
+    (nhds 0) (nhds 0),
+  rwa ← this,
+  congr, funext h, rw [← mul_div_assoc, ← complex.abs_mul], congr, ring
+end
 
-instance hol_submodule : is_submodule {f : domain → ℂ | is_holomorphic f} := sorry
-
-/-
+instance hol_submodule : is_submodule {f : domain → ℂ | is_holomorphic f} :=
 { zero_ := zero_hol,
-  add_  := begin
-    intros f g f_hol g_hol,
-    intro z₀,
-    cases f_hol z₀ with f' limf,
-    cases g_hol z₀ with g' limg,
-    existsi f' + g',
-    dsimp only [has_complex_derivative_at],
-    rw extend_by_zero_add,
-    apply squeeze_zero,
-    { intro h,
-      exact abs_nonneg _ },
-    { intro h,
-      
-      sorry },
-    { 
-      sorry },
-    { 
-      sorry },
-  end,
-  smul := 
-  begin
-    
-    sorry
-  end,
-  
-} -/
+  add_  := add_hol,
+  smul  := smul_hol }
