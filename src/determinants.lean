@@ -8,6 +8,50 @@ import .Sym
 
 universes u v
 
+lemma finset.prod_mul_right {α} [group α] [fintype α]
+  {β} [comm_monoid β] {f : α → β} {s : finset α} (x : α) :
+  s.prod f =
+  (s.map ⟨λ z, z * x⁻¹, λ _ _, mul_right_cancel⟩).prod (λ z, f (z * x)) :=
+finset.prod_bij (λ z _, z * x⁻¹) (λ _ _, by simpa) (λ _ _, by simp)
+  (λ _ _ _ _, mul_right_cancel) (λ b H,
+    ⟨b * x, by revert H; simp [eq_comm] {contextual:=tt}, by simp⟩)
+
+lemma finset.prod_mul_left {α} [group α] [fintype α]
+  {β} [comm_monoid β] {f : α → β} (x : α) :
+  (finset.univ : finset α).prod (λ z, f (x * z))
+  = (finset.univ : finset α).prod f :=
+finset.prod_bij (λ z _, x * z) (λ _ _, finset.mem_univ _) (λ _ _, rfl)
+  (λ _ _ _ _, mul_left_cancel) (λ b _, ⟨x⁻¹ * b, finset.mem_univ _, by simp⟩)
+
+lemma finset.sum_mul_right {α} [group α] [fintype α]
+  {β} [add_comm_monoid β] {f : α → β} {s : finset α} (x : α) :
+  s.sum f =
+  (s.map ⟨λ z, z * x⁻¹, λ _ _, mul_right_cancel⟩).sum (λ z, f (z * x)) :=
+finset.sum_bij (λ z _, z * x⁻¹) (λ _ _, by simpa) (λ _ _, by simp)
+  (λ _ _ _ _, mul_right_cancel) (λ b H,
+    ⟨b * x, by revert H; simp [eq_comm] {contextual:=tt}, by simp⟩)
+
+lemma finset.sum_mul_left {α} [group α] [fintype α]
+  {β} [add_comm_monoid β] {f : α → β} (x : α) :
+  (finset.univ : finset α).sum (λ z, f (x * z))
+  = (finset.univ : finset α).sum f :=
+finset.sum_bij (λ z _, x * z) (λ _ _, finset.mem_univ _) (λ _ _, rfl)
+  (λ _ _ _ _, mul_left_cancel) (λ b _, ⟨x⁻¹ * b, finset.mem_univ _, by simp⟩)
+
+lemma finset.prod_perm {α} [fintype α] [decidable_eq α]
+  {β} [comm_monoid β] {f : α → β} (σ : equiv.perm α) :
+  (finset.univ : finset α).prod f
+  = finset.univ.prod (λ z, f (σ z)) :=
+eq.symm $ finset.prod_bij (λ z _, σ z) (λ _ _, finset.mem_univ _) (λ _ _, rfl)
+  (λ _ _ _ _ H, σ.bijective.1 H) (λ b _, ⟨σ⁻¹ b, finset.mem_univ _, by simp⟩)
+
+lemma finset.sum_perm {α} [fintype α] [decidable_eq α]
+  {β} [add_comm_monoid β] {f : α → β} (σ : equiv.perm α) :
+  (finset.univ : finset α).sum f
+  = finset.univ.sum (λ z, f (σ z)) :=
+eq.symm $ finset.sum_bij (λ z _, σ z) (λ _ _, finset.mem_univ _) (λ _ _, rfl)
+  (λ _ _ _ _ H, σ.bijective.1 H) (λ b _, ⟨σ⁻¹ b, finset.mem_univ _, by simp⟩)
+
 namespace matrix
 variables {n : Type u} [fintype n] [decidable_eq n] {R : Type v} [comm_ring R]
 
@@ -37,13 +81,30 @@ fintype.of_equiv (Sym (fintype.card n)) $
   left_inv := λ σ, by ext i; simp,
   right_inv := λ σ, by ext i; simp }
 
+@[simp] lemma equiv.perm.sign_mul (σ τ : equiv.perm n) :
+  (σ * τ).sign = σ.sign * τ.sign :=
+is_group_hom.mul _ _ _
+
+@[simp] lemma equiv.perm.sign_one :
+  equiv.perm.sign (1 : equiv.perm n) = 1 :=
+is_group_hom.one _
+
+@[simp] lemma equiv.perm.sign_refl :
+  equiv.perm.sign (equiv.refl n) = 1 :=
+is_group_hom.one equiv.perm.sign
+
+@[simp] lemma equiv.perm.sign_swap' {i j : n} :
+  (equiv.swap i j).sign = if i = j then 1 else -1 :=
+if H : i = j then by simp [H, equiv.swap_self] else
+by simp [equiv.perm.sign_swap H, H]
+
 def e (σ : equiv.perm n) : R := ((σ.sign : ℤ) : R)
 
 @[simp] lemma e_mul (σ τ : equiv.perm n) : (e (σ * τ) : R) = e σ * e τ :=
 by unfold e; rw ← int.cast_mul; congr; rw ← units.mul_coe; congr; apply is_group_hom.mul
 
-@[simp] lemma e_swap {i j : n} (H : i ≠ j) : (e (equiv.swap i j) : R) = -1 :=
-by unfold e; rw [equiv.perm.sign_swap H]; simp
+@[simp] lemma e_swap {i j : n} : (e (equiv.swap i j) : R) = if i = j then 1 else -1 :=
+by by_cases H : i = j; simp [e, H]
 
 @[simp] lemma e_one : (e (1 : equiv.perm n) : R) = 1 :=
 by unfold e; rw is_group_hom.one (equiv.perm.sign : equiv.perm n → units ℤ); simp
@@ -61,18 +122,14 @@ finset.univ.sum (λ (σ : equiv.perm n),
 
 @[simp] lemma det_diagonal {d : n → R} : det (diagonal d) = finset.univ.prod d :=
 begin
-  transitivity finset.sum (finset.singleton (1 : equiv.perm n)) _,
-  { symmetry,
-    apply finset.sum_subset (finset.subset_univ _),
-    intros σ h1 h2,
-    simp at h2,
-    have h3 := mt (equiv.ext _ _) h2,
-    simp [not_forall] at h3,
-    cases h3 with x h3,
+  refine (finset.sum_eq_single 1 _ _).trans _,
+  { intros σ h1 h2,
+    cases not_forall.1 (mt (equiv.ext _ _) h2) with x h3,
     convert mul_zero _,
     apply finset.prod_eq_zero,
     { change x ∈ _, simp },
-    simp [diagonal, h3] },
+    exact if_neg h3 },
+  simp,
   simp
 end
 
@@ -80,8 +137,8 @@ end
 by simp [scalar, fintype.card]
 
 -- Useful lemma by Chris
-lemma zero_pow {n : ℕ} : 0 < n → (0 : R) ^ n = 0 :=
-by cases n; simp [_root_.pow_succ, lt_irrefl]
+lemma zero_pow : ∀ {n : ℕ}, 0 < n → (0 : R) ^ n = 0
+| (n+1) H := zero_mul _
 
 @[simp] lemma det_zero (h : nonempty n) : det (0 : matrix n n R) = (0 : R) :=
 by rw ← scalar_zero; simp [-scalar_zero, zero_pow, fintype.card_pos_iff.mpr h]
@@ -93,86 +150,29 @@ lemma det_mul_aux (M N : matrix n n R) (p : n → n) (H : ¬function.bijective p
   finset.sum (finset.univ : finset (equiv.perm n))
     (λ σ, e σ * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
       * finset.prod (finset.univ : finset n) (λ x, N (p x) x))) = 0 :=
-have H1 : ¬function.injective p,
-  from mt (λ h, and.intro h $ fintype.injective_iff_surjective.1 h) H,
-let ⟨i, hi⟩ := not_forall.1 H1 in
-let ⟨j, hj⟩ := not_forall.1 hi in
-let ⟨H2, H3⟩ := not_imp.1 hj in
-calc  finset.sum (finset.univ : finset (equiv.perm n))
-        (λ σ, e σ * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x)))
-    = finset.sum (finset.univ.filter (λ σ, σ.sign = 1) 
-          ∪ finset.univ.filter (λ σ, σ.sign = -1) : finset (equiv.perm n))
-        (λ σ, e σ * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x))) :
-  finset.sum_congr (finset.eq_univ_iff_forall.2 $
-    by intro σ; simpa using int.units_eq_one_or _).symm (λ _ _, rfl)
-... = finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, e σ * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x)))
-    + finset.sum (finset.univ.filter (λ σ, σ.sign = -1) : finset (equiv.perm n))
-        (λ σ, e σ * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x))) :
-  finset.sum_union (finset.eq_empty_of_forall_not_mem $ λ σ H,
-    by simp at H; from absurd (H.1.symm.trans H.2) dec_trivial)
-... = finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, e σ * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x)))
-    + finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, e (σ * equiv.swap i j) * (finset.prod (finset.univ : finset n) (λ x, M ((σ * equiv.swap i j) x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x))) :
-  begin
-    refine congr_arg _ (finset.sum_bij (λ σ _, σ * equiv.swap i j) _ _ _ _).symm,
-    { refine λ σ H, finset.mem_filter.2 ⟨finset.mem_univ _, (is_group_hom.mul _ _ _).trans _⟩,
-      simp at H, simp [equiv.perm.sign_swap H3, H] },
-    { intros, refl },
-    { intros _ _ _ _, exact mul_right_cancel },
-    refine λ σ H, ⟨σ * equiv.swap i j, finset.mem_filter.2
-      ⟨finset.mem_univ _, (is_group_hom.mul equiv.perm.sign _ _).trans _⟩, _⟩,
-    { simp at H, rw [H, equiv.perm.sign_swap H3], refl },
-    dsimp, rw [mul_assoc, equiv.swap_mul_self, mul_one]
-  end
-... = finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, e σ * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x)))
-    + finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, e (σ * equiv.swap i j) * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x))) :
-  begin
-    refine congr_arg _ (finset.sum_congr rfl (λ σ _, congr_arg _ _)),
-    suffices : finset.prod (finset.univ : finset n) (λ x, M ((σ * equiv.swap i j) x) (p x))
-      = finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x)),
-    { rw this },
-    refine finset.prod_bij (λ x _, equiv.swap i j x) _ _ _ _,
-    { exact λ _ _, finset.mem_univ _ },
-    { refine λ _ _, congr_arg _ _,
-      rw [equiv.swap_apply_def],
-      split_ifs; cc },
-    { exact λ _ _ _ _ H, (equiv.swap i j).bijective.1 H },
-    refine λ k _, ⟨equiv.swap i j k, finset.mem_univ _, _⟩,
-    simp
-  end
-... = finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, e σ * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x))
-        + e (σ * equiv.swap i j) * (finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x))) :
-  finset.sum_add_distrib.symm
-... = finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x)
-          * (e σ + e (σ * equiv.swap i j))) :
-  finset.sum_congr rfl (λ _ _, (add_mul _ _ _).symm.trans $ mul_comm _ _)
-... = finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, finset.prod (finset.univ : finset n) (λ x, M (σ x) (p x))
-          * finset.prod (finset.univ : finset n) (λ x, N (p x) x)
-          * 0) :
-  finset.sum_congr rfl (λ _ _, congr_arg _ $
-    by rw [e_mul, e_swap H3, mul_neg_one, add_neg_self])
-... = finset.sum (finset.univ.filter (λ σ, σ.sign = 1) : finset (equiv.perm n))
-        (λ σ, (0 : R)) :
-  finset.sum_congr rfl (λ _ _, mul_zero _)
-... = 0 : finset.sum_const_zero
+begin
+  have H1 : ¬function.injective p,
+    from mt (λ h, and.intro h $ fintype.injective_iff_surjective.1 h) H,
+  unfold function.injective at H1, simp [not_forall] at H1,
+  rcases H1 with ⟨i, j, H2, H3⟩,
+  have H4 : (finset.univ : finset (equiv.perm n)) = finset.univ.filter (λ σ, σ.sign = 1) ∪ finset.univ.filter (λ σ, σ.sign = -1),
+  { ext k; simpa using int.units_eq_one_or _ },
+  have H5 : (finset.univ : finset (equiv.perm n)).filter (λ σ, σ.sign = 1) ∩ finset.univ.filter (λ σ, σ.sign = -1) = ∅,
+  { ext k, simp {contextual:=tt}, intro _, from dec_trivial },
+  have H6 : finset.map ⟨λ z, z * equiv.swap i j, λ _ _, mul_right_cancel⟩
+    (finset.univ.filter (λ σ, σ.sign = -1))
+    = finset.univ.filter (λ σ, σ.sign = 1),
+  { ext k, split,
+    { exact λ H, by revert H; simp [eq_comm, H3] {contextual:=tt} },
+    { exact λ H, finset.mem_map.2 ⟨k * equiv.swap i j,
+        by revert H; simp [H3, mul_assoc] {contextual:=tt}⟩ } },
+  have H7 : ∀ k, p (equiv.swap i j k) = p k,
+  { intro k, rw [equiv.swap_apply_def], split_ifs; cc },
+  rw [H4, finset.sum_union H5],
+  refine eq.trans (congr_arg _ (finset.sum_mul_right $ equiv.swap i j)) _,
+  conv { to_lhs, congr, skip, for (finset.prod _ _) [1] { rw finset.prod_perm (equiv.swap i j)}},
+  simp [H3, H6, H7]
+end
 
 @[simp] lemma det_mul (M N : matrix n n R) :
 det (M * N) = det M * det N :=
