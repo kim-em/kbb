@@ -60,3 +60,45 @@ instance (m : ℤ) : is_group_action (SL2Z_M_ m) :=
 { mul := λ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩,
     by ext; simp [SL2Z_M_, add_mul, mul_add, mul_assoc],
   one := λ ⟨_, _, _, _, _⟩, by ext; simp [SL2Z_M_], }
+
+@[elab_as_eliminator]
+def fin2.rec_on {C : fin 2 → Sort*} : ∀ (n : fin 2), C 0 → C 1 → C n
+| ⟨0, _⟩ C0 _ := C0
+| ⟨1, _⟩ _ C1 := C1
+| ⟨n+2, H⟩ _ _ := false.elim $ by cases H with H H; cases H with H H; cases H
+
+@[elab_as_eliminator]
+theorem fin2.induction_on {C : fin 2 → Prop} (n : fin 2) (H0 : C 0) (H1 : C 1) : C n :=
+fin2.rec_on n H0 H1
+
+def SL2Z_SL_2_Z : SL2Z ≃ SL 2 ℤ :=
+{ to_fun := λ A, ⟨units.mk
+    (λ i j, fin2.rec_on i (fin2.rec_on j A.a A.b) (fin2.rec_on j A.c A.d))
+    (λ i j, fin2.rec_on i (fin2.rec_on j A.d (-A.b)) (fin2.rec_on j (-A.c) A.a))
+    (matrix.ext' $ λ i j, fin2.induction_on i
+      (fin2.induction_on j
+        (show A.a * A.d + (A.b * (-A.c) + 0) = 1, by rw [add_zero, mul_neg_eq_neg_mul_symm, ← sub_eq_add_neg, A.det])
+        (show A.a * (-A.b) + (A.b * A.a + 0) = 0, by rw [add_zero, mul_comm, ← add_mul, neg_add_self, zero_mul]))
+      (fin2.induction_on j
+        (show A.c * A.d + (A.d * (-A.c) + 0) = 0, by rw [add_zero, mul_comm, ← mul_add, add_neg_self, mul_zero])
+        (show A.c * (-A.b) + (A.d * A.a + 0) = 1, by rw [add_zero, mul_comm, add_comm, mul_comm, ← neg_mul_eq_neg_mul, ← sub_eq_add_neg, A.det])))
+    (matrix.ext' $ λ i j, fin2.induction_on i
+      (fin2.induction_on j
+        (show A.d * A.a + (-A.b * A.c + 0) = 1, by rw [add_zero, ← neg_mul_eq_neg_mul, mul_comm, ← sub_eq_add_neg, A.det])
+        (show A.d * A.b + (-A.b * A.d + 0) = 0, by rw [add_zero, mul_comm, ← add_mul, add_neg_self, zero_mul]))
+      (fin2.induction_on j
+        (show -A.c * A.a + (A.a * A.c + 0) = 0, by rw [add_zero, mul_comm, ← mul_add, neg_add_self, mul_zero])
+        (show -A.c * A.b + (A.a * A.d + 0) = 1, by rw [add_zero, ← neg_mul_eq_neg_mul, mul_comm, add_comm, ← sub_eq_add_neg, A.det]))),
+    is_subgroup.mem_trivial.2 $ units.ext $
+    show ((1:ℤ) * (A.a * (A.d * 1))) + (((-1:ℤ) * (A.c * (A.b * 1))) + (0:ℤ)) = 1,
+    by rw [one_mul, mul_one, mul_one, add_zero, neg_one_mul, mul_comm A.c]; from A.det⟩,
+  inv_fun := λ M, ⟨M.1.1 0 0, M.1.1 0 1, M.1.1 1 0, M.1.1 1 1,
+    have H : ((1:ℤ) * (M.1.1 0 0 * (M.1.1 1 1 * 1))) + (((-1:ℤ) * (M.1.1 1 0 * (M.1.1 0 1 * 1))) + (0:ℤ)) = 1,
+      from units.ext_iff.1 (is_subgroup.mem_trivial.1 M.2),
+    by rwa [one_mul, mul_one, mul_one, add_zero, neg_one_mul, mul_comm (M.1.1 1 0)] at H⟩,
+  left_inv := λ A, integral_matrices_with_determinant.ext 1 _ _
+    rfl rfl rfl rfl,
+  right_inv := λ M, subtype.eq $ units.ext $ matrix.ext' $ λ i j,
+    fin2.induction_on i
+      (fin2.induction_on j rfl rfl)
+      (fin2.induction_on j rfl rfl) }
