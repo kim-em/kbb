@@ -6,3 +6,4 @@ path = "src"
 
 [dependencies]
 mathlib = {git = "git@github.com:leanprover-community/mathlib.git", rev = "f10e7adbedb01d95dfed407f8fcf76ce6329cbf8"}
+mathlib-nursery = {git = "git@github.com:leanprover-community/mathlib-nursery.git", rev = "d1b9d6a0ae11b6a4711d5ffa7d1e97418ac05ce4"}
