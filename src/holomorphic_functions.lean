@@ -12,9 +12,9 @@ open filter complex
 
 def has_complex_derivative_at
 (f : ℂ → ℂ)
-(f'z : ℂ) 
+(f'z : ℂ)
 (z : ℂ) : Prop :=
-let error_term (h : ℂ) : ℝ := 
+let error_term (h : ℂ) : ℝ :=
     abs((f (z + h) - (f z + f'z * h))/h) in
 (tendsto error_term (nhds 0) (nhds 0))
 
@@ -113,16 +113,27 @@ begin
   intro z₀,
   cases f_hol z₀ with f'z₀ Hf,
   cases g_hol z₀ with g'z₀ Hg,
-  existsi (f'z₀ + g'z₀),
+  existsi f'z₀*(g z₀) + (f z₀)*g'z₀,
+  let F := extend_by_zero f,
+  let G := extend_by_zero g,
   rw extend_by_zero_mul,
-  have Hfg : tendsto (λ (h : ℂ), abs ((extend_by_zero f (↑z₀ + h) - (extend_by_zero f ↑z₀ + f'z₀ * h)) / h) *
-         abs ((extend_by_zero g (↑z₀ + h) - (extend_by_zero g ↑z₀ + g'z₀ * h)) / h)) (nhds 0) (nhds 0) :=
-  by simpa using tendsto_mul Hf Hg,
-  refine squeeze_zero _ _ Hfg,
-  { intro h, apply complex.abs_nonneg },
-  { intro h,
-    rw ← complex.abs_mul,
-    sorry }
+  let ε := λ h, F (z₀ + h) - f z₀ - f'z₀*h,
+  let η := λ h, G (z₀ + h) - g z₀ - g'z₀*h,
+  have : ∀ h, (F * G) (z₀ + h) = (f z₀) * (g z₀) + (f'z₀*(g z₀) + (f z₀)*g'z₀)*h +
+  (g z₀ + g'z₀*h + η h)*(ε h) + (f z₀ + f'z₀*h)*(η h) + f'z₀*g'z₀*h*h,
+  by intros h ; dsimp[ε, η] ; ring,
+
+  change tendsto
+    (λ (h : ℂ),
+       abs
+         (((F*G) (z₀ + h) - (F z₀ * G z₀ + (f'z₀ * g z₀ + f z₀ * g'z₀) * h)) /
+            h)) (nhds 0) (nhds 0),
+  have H1 : F z₀ = f z₀, by cases z₀ with v p ; simp [F, p, extend_by_zero],
+  have H2 : G z₀ = g z₀, by cases z₀ with v p ; simp [G, p, extend_by_zero],
+  simp only [this, H1, H2],
+  ring,
+
+  sorry
 end
 
 lemma neg_hol (f : domain → ℂ) (f_hol : is_holomorphic f) : is_holomorphic (-f) :=
