@@ -6,11 +6,11 @@ def GL (n : ℕ) (R : Type u) [ring R] := units (matrix (fin n) (fin n) R)
 
 namespace GL
 
-variables {n : ℕ} {R : Type u} [ring R]
+variables {n : ℕ} {R : Type u} [comm_ring R]
 
 instance : group (GL n R) := by unfold GL; apply_instance
 
-noncomputable def det : GL n R → units R := units.map matrix.det
+def det : GL n R → units R := units.map matrix.det
 
 instance : is_group_hom (det : GL n R → units R) := by unfold det; apply_instance
 

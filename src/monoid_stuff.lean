@@ -1,10 +1,7 @@
+import algebra.group
 import group_theory.subgroup
 
 universes u v
-
-class is_monoid_hom {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α → β) : Prop :=
-(map_one : f 1 = 1)
-(map_mul : ∀ {x y}, f (x * y) = f x * f y)
 
 namespace units
 variables {α : Type u} {β : Type v} [monoid α] [monoid β] (f : α → β) [is_monoid_hom f]
