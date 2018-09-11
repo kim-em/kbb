@@ -174,21 +174,15 @@ instance xyzzy {F : Type u} [normed_field F] : normed_space F F :=
 lemma smul_hol (c : ℂ) (f : domain → ℂ) (f_hol : is_holomorphic f) : is_holomorphic (c • f) :=
 begin
   intro z₀,
-  cases f_hol z₀ with f'z₀ H,
+  cases f_hol z₀ with f'z₀ Hf,
   existsi c * f'z₀,
   rw extend_by_zero_smul,
-  dsimp only [has_complex_derivative_at] at ⊢ H,
-  have H' := @tendsto_smul _ _ _ _ _ (λ x : ℂ, abs c) _ (nhds (0 : ℂ)) (abs c) (0 : ℝ) tendsto_const_nhds H,
-  simp at ⊢ H',
-  suffices :   tendsto
-    (λ (x : ℂ), abs c * (abs (-(f'z₀ * x) + (extend_by_zero f (x + ↑z₀) + -extend_by_zero f ↑z₀)) / abs x))
-    (nhds 0) (nhds 0)
-    = tendsto
-    (λ (h : ℂ),
-       abs (-(c * f'z₀ * h) + (c * extend_by_zero f (h + ↑z₀) + -(c * extend_by_zero f ↑z₀))) / abs h)
-    (nhds 0) (nhds 0),
-  rwa ← this,
-  congr, funext h, rw [← mul_div_assoc, ← complex.abs_mul], congr, ring
+  rw has_complex_derivative_at_iff'' at *,
+  conv { congr,
+    { funext, simp only [pi.smul_apply, smul_eq_mul],
+      rw [← mul_sub, mul_assoc, ← mul_sub, mul_div_assoc] },
+    skip, rw ← mul_zero c },
+  exact tendsto_mul tendsto_const_nhds Hf
 end
 
 instance hol_submodule : is_submodule {f : domain → ℂ | is_holomorphic f} :=
