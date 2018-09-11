@@ -3,8 +3,11 @@ import tactic.tidy
 import group_theory.group_action
 import .matrix_groups
 
+run_cmd mk_simp_attr `SL2Z
+
 @[tidy] meta def tidy_ring := `[ring]
 
+@[derive decidable_eq]
 structure integral_matrices_with_determinant (m : ℤ) :=
 (a b c d : ℤ)
 (det : a * d - b * c = m)
@@ -16,6 +19,7 @@ theorem integral_matrices_with_determinant.ext (m : ℤ) :
   A = B
 | ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩ rfl rfl rfl rfl := rfl
 
+@[reducible]
 def SL2Z := integral_matrices_with_determinant 1
 
 instance : group SL2Z :=
@@ -33,18 +37,18 @@ instance : group SL2Z :=
   inv := λ A, ⟨A.d, -A.b, -A.c, A.a, by simpa [mul_comm] using A.det⟩,
   mul_left_inv := λ A, by cases A; ext; change _ + _ = _; simp at A_det; simp [mul_comm, A_det]; refl }
 
-@[simp] lemma SL2Z_mul_a (A B : SL2Z) : (A * B).a = A.a * B.a + A.b * B.c := rfl
-@[simp] lemma SL2Z_mul_b (A B : SL2Z) : (A * B).b = A.a * B.b + A.b * B.d := rfl
-@[simp] lemma SL2Z_mul_c (A B : SL2Z) : (A * B).c = A.c * B.a + A.d * B.c := rfl
-@[simp] lemma SL2Z_mul_d (A B : SL2Z) : (A * B).d = A.c * B.b + A.d * B.d := rfl
-@[simp] lemma SL2Z_one_a : (1 : SL2Z).a = 1 := rfl
-@[simp] lemma SL2Z_one_b : (1 : SL2Z).b = 0 := rfl
-@[simp] lemma SL2Z_one_c : (1 : SL2Z).c = 0 := rfl
-@[simp] lemma SL2Z_one_d : (1 : SL2Z).d = 1 := rfl
-@[simp] lemma SL2Z_inv_a (A : SL2Z) : (A⁻¹).a = A.d := rfl
-@[simp] lemma SL2Z_inv_b (A : SL2Z) : (A⁻¹).b = -A.b := rfl
-@[simp] lemma SL2Z_inv_c (A : SL2Z) : (A⁻¹).c = -A.c := rfl
-@[simp] lemma SL2Z_inv_d (A : SL2Z) : (A⁻¹).d = A.a := rfl
+@[simp, SL2Z] lemma SL2Z_mul_a (A B : SL2Z) : (A * B).a = A.a * B.a + A.b * B.c := rfl
+@[simp, SL2Z] lemma SL2Z_mul_b (A B : SL2Z) : (A * B).b = A.a * B.b + A.b * B.d := rfl
+@[simp, SL2Z] lemma SL2Z_mul_c (A B : SL2Z) : (A * B).c = A.c * B.a + A.d * B.c := rfl
+@[simp, SL2Z] lemma SL2Z_mul_d (A B : SL2Z) : (A * B).d = A.c * B.b + A.d * B.d := rfl
+@[simp, SL2Z] lemma SL2Z_one_a : (1 : SL2Z).a = 1 := rfl
+@[simp, SL2Z] lemma SL2Z_one_b : (1 : SL2Z).b = 0 := rfl
+@[simp, SL2Z] lemma SL2Z_one_c : (1 : SL2Z).c = 0 := rfl
+@[simp, SL2Z] lemma SL2Z_one_d : (1 : SL2Z).d = 1 := rfl
+@[simp, SL2Z] lemma SL2Z_inv_a (A : SL2Z) : (A⁻¹).a = A.d := rfl
+@[simp, SL2Z] lemma SL2Z_inv_b (A : SL2Z) : (A⁻¹).b = -A.b := rfl
+@[simp, SL2Z] lemma SL2Z_inv_c (A : SL2Z) : (A⁻¹).c = -A.c := rfl
+@[simp, SL2Z] lemma SL2Z_inv_d (A : SL2Z) : (A⁻¹).d = A.a := rfl
 
 def SL2Z_M_ (m : ℤ) : SL2Z → integral_matrices_with_determinant m → integral_matrices_with_determinant m :=
 λ X Y, {  a := X.a * Y.a + X.b * Y.c,
@@ -102,3 +106,29 @@ def SL2Z_SL_2_Z : SL2Z ≃ SL 2 ℤ :=
     fin2.induction_on i
       (fin2.induction_on j rfl rfl)
       (fin2.induction_on j rfl rfl) }
+
+namespace integral_matrices_with_determinant
+
+variables (m : ℤ) (A B : integral_matrices_with_determinant m)
+
+instance : has_neg (integral_matrices_with_determinant m) :=
+⟨λ A, ⟨-A.a, -A.b, -A.c, -A.d, by rw [neg_mul_neg, neg_mul_neg, A.det]⟩⟩
+
+@[simp, SL2Z] lemma neg_a : (-A).a = -A.a := rfl
+@[simp, SL2Z] lemma neg_b : (-A).b = -A.b := rfl
+@[simp, SL2Z] lemma neg_c : (-A).c = -A.c := rfl
+@[simp, SL2Z] lemma neg_d : (-A).d = -A.d := rfl
+@[simp, SL2Z] protected lemma neg_neg : -(-A) = A := by ext; simp
+
+end integral_matrices_with_determinant
+
+namespace SL2Z
+
+variables (A B : SL2Z)
+
+@[simp, SL2Z] protected lemma neg_one_mul : -1 * A = -A := by ext; simp
+@[simp, SL2Z] protected lemma neg_mul_neg : -A * -B = A * B := by ext; simp
+@[simp, SL2Z] protected lemma neg_mul : -(A * B) = -A * B := by ext; simp
+@[simp, SL2Z] protected lemma neg_neg : -(-A) = A := by ext; simp
+
+end SL2Z
