@@ -50,13 +50,14 @@ int.induction_on n dec_trivial
 @[simp, SL2Z] lemma S_mul_S : S * S = -1 := rfl
 
 @[elab_as_eliminator]
-protected theorem induction_on {C : (Mat m) → Prop} (A : Mat m)
+protected theorem induction_on {mne0 : m ≠ 0} {C : (Mat m) → Prop} (A : Mat m)
   (H0 : ∀ {A : Mat m} (h0 : A.c = 0) (h1 : A.a * A.d = m) (h2 : 0 ≤ A.a) (h3 : 0 ≤ A.b) (h4 : A.b ≤ A.d ∨ A.b ≤ -A.d), C A)
   (HS : ∀ B, C B → C (SL2Z_M_ m S B)) (HT : ∀ B, C B → C (SL2Z_M_ m T B)) : C A :=
 have hSid : ∀ B, (SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m S B)))) = B, from λ B, by ext; simp [SL2Z_M_],
 have hneg : ∀ B, (SL2Z_M_ m S (SL2Z_M_ m S B)) = -B, from λ B, by ext; simp [SL2Z_M_],
 have HS' : ∀ B, C (SL2Z_M_ m S B) → C B,
   from λ B ih, have H : _ := (HS _ $ HS _ $ HS _ ih), by rwa hSid B at H,
+have Hneg : ∀ B, C (-B) → C B, from λ B ih, by rw ←hneg B at ih; apply (HS' _ $ HS' _ ih),
 have hTinv : ∀ B, SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m T (SL2Z_M_ m S (SL2Z_M_ m T (SL2Z_M_ m S B)))))) = SL2Z_M_ m T⁻¹ B,
   from λ B, by repeat {rw [←is_monoid_action.mul (SL2Z_M_ m)]}; congr,
 have HT' : ∀ B, C B → C (SL2Z_M_ m T⁻¹ B),
@@ -93,7 +94,7 @@ have HT5 : ∀ B (n:ℤ), C (SL2Z_M_ m (T^n) B) → C B, from λ B n,
       assumption end),
 suffices ∀ n (A : Mat m), int.nat_abs A.c = n → C A,
   from this _ _ rfl,
-λ n, nat.strong_induction_on n $ λ n,
+λ n_stupid, nat.strong_induction_on n_stupid $ λ n,
 assume ih : ∀ k, k < n → ∀ (A : Mat m), int.nat_abs (A.c) = k → C A,
 show ∀ (A : Mat m), int.nat_abs (A.c) = n → C A,
 from λ A H1, or.cases_on (nat.eq_zero_or_eq_succ_pred n)
@@ -101,6 +102,19 @@ from λ A H1, or.cases_on (nat.eq_zero_or_eq_succ_pred n)
   have H4 : A.a * A.d = m, by simpa only [H3, mul_zero, sub_zero] using A.det,
     show C A,
 begin
+  clear H1,
+  revert A,
+  suffices : ∀ (A : Mat m), A.c = 0 → A.a * A.d = m → 0 ≤ A.a → C A,
+  intros A h0 h1,
+  cases (lt_or_le A.a 0) with h2 h2,
+  { exact (Hneg _ $ this (-A) (by simp [h0]) (by simp [h1]) (by simp [le_of_lt,h2])) },
+  { exact this A h0 h1 h2 },
+  suffices : ∀ (A : Mat m), A.c = 0 → A.a * A.d = m → 0 ≤ A.a → 0 ≤ A.b → C A,
+  intros A h0 h1 h2,
+  cases (lt_or_le A.b 0) with h3 h3,
+  { exact (HT5 _ (-A.b * A.d) $ this ((SL2Z_M_ m (T ^ (-A.b * A.d)) A)) (begin dsimp only [SL2Z_M_], simp [h0] end) _ _ _),
+    sorry },
+  { exact this A h0 h1 h2 h3 },
   sorry
 end)
 (assume H2 : n = n.pred.succ, or.cases_on (lt_or_le (int.nat_abs A.a) n)
