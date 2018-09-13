@@ -112,8 +112,9 @@ begin
   suffices : ∀ (A : Mat m), A.c = 0 → A.a * A.d = m → 0 ≤ A.a → 0 ≤ A.b → C A,
   intros A h0 h1 h2,
   cases (lt_or_le A.b 0) with h3 h3,
-  { exact (HT5 _ (-A.b * A.d) $ this ((SL2Z_M_ m (T ^ (-A.b * A.d)) A)) (begin dsimp only [SL2Z_M_], simp [h0] end) _ _ _),
-    sorry },
+  { refine (HT5 _ (-A.b * A.d) $ this ((SL2Z_M_ m (T ^ (-A.b * A.d)) A))
+      (by simp [SL2Z_M_,h0]) (by simp [SL2Z_M_,h0,h1]) (by simp [SL2Z_M_,h0,h2]) _),
+    { sorry } },
   { exact this A h0 h1 h2 h3 },
   sorry
 end)
