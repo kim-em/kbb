@@ -141,7 +141,13 @@ begin
   { exact H0 h0 h1 h2 h3 h4 },
   apply HT5 _ (-(A.b/A.d)),
   apply H0; simp [SL2Z_M_,h0,h1,h2,h3],
-  sorry, sorry
+  { apply le_add_of_neg_add_le,
+    conv { to_lhs, simp },
+    simp,
+    apply int.div_mul_le,
+    intro nope, simp [nope] at h1,
+    exact mne0 h1.symm },
+  { sorry }
 end)
 (assume H2 : n = n.pred.succ, or.cases_on (lt_or_le (int.nat_abs A.a) n)
   (assume H3 : int.nat_abs (A.a) < n, HS' _ $ ih _
