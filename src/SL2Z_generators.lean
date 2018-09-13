@@ -1,5 +1,7 @@
-import tactic.linarith
 import .modular_group
+import .action
+
+local attribute [instance, priority 0] classical.prop_decidable
 
 theorem int.mul_eq_one {m n : ℤ} :
   m * n = 1 ↔ m = 1 ∧ n = 1 ∨ m = -1 ∧ n = -1 :=
@@ -49,18 +51,6 @@ int.induction_on n dec_trivial
 @[simp, SL2Z] lemma T_pow_d (n : ℤ) : (T^n).d = 1 := (T_pow_aux n).2.2.2
 
 @[simp, SL2Z] lemma S_mul_S : S * S = -1 := rfl
-
-section linear_ordered_ring
-variables {α : Type*} [linear_ordered_ring α]
-
-lemma mul_self_pos {a : α} (h : a ≠ 0) : a * a > 0 :=
-begin
-  apply lt_of_le_of_ne (mul_self_nonneg a),
-  intro h,
-  have := linear_ordered_ring.eq_zero_or_eq_zero_of_mul_eq_zero (eq.symm h),
-  finish
-end
-end linear_ordered_ring
 
 @[elab_as_eliminator]
 protected theorem induction_on {mne0 : m ≠ 0} {C : (Mat m) → Prop} (A : Mat m)
@@ -169,4 +159,16 @@ end)
 --   (λ B ih, group.in_closure.mul (group.in_closure.basic $ or.inr $ or.inl rfl) ih)
 --   (λ B ih, group.in_closure.mul (group.in_closure.basic $ or.inl rfl) ih)
 
+def reps (m : ℤ) := {A : Mat m | A.d > 0 ∧ A.b ≥ 0 ∧ A.b < A.d }
+
+instance : fintype (reps m) :=
+sorry
+
+def π (m : ℤ) : reps m → quotient (action_rel $ SL2Z_M_ m) :=
+  λ A, (@quotient.mk _ (action_rel $ SL2Z_M_ m)) A
+
+lemma reps_reps : m ≠ 0 → function.surjective (π m) := sorry
+
+noncomputable lemma finiteness : m ≠ 0 → fintype (quotient $ action_rel $ SL2Z_M_ m) :=
+λ h, fintype.of_surjective (π m) (@reps_reps m h)
 end SL2Z_M_
