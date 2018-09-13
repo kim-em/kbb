@@ -51,7 +51,7 @@ int.induction_on n dec_trivial
 
 @[elab_as_eliminator]
 protected theorem induction_on {mne0 : m ≠ 0} {C : (Mat m) → Prop} (A : Mat m)
-  (H0 : ∀ {A : Mat m} (h0 : A.c = 0) (h1 : A.a * A.d = m) (h2 : 0 ≤ A.a) (h3 : 0 ≤ A.b) (h4 : A.b ≤ A.d ∨ A.b ≤ -A.d), C A)
+  (H0 : ∀ {A : Mat m} (h0 : A.c = 0) (h1 : A.a * A.d = m) (h2 : 0 ≤ A.a) (h3 : 0 ≤ A.b) (h4 : int.nat_abs A.b ≤ int.nat_abs A.d), C A)
   (HS : ∀ B, C B → C (SL2Z_M_ m S B)) (HT : ∀ B, C B → C (SL2Z_M_ m T B)) : C A :=
 have hSid : ∀ B, (SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m S B)))) = B, from λ B, by ext; simp [SL2Z_M_],
 have hneg : ∀ B, (SL2Z_M_ m S (SL2Z_M_ m S B)) = -B, from λ B, by ext; simp [SL2Z_M_],
@@ -114,9 +114,15 @@ begin
   cases (lt_or_le A.b 0) with h3 h3,
   { refine (HT5 _ (-A.b * A.d) $ this ((SL2Z_M_ m (T ^ (-A.b * A.d)) A))
       (by simp [SL2Z_M_,h0]) (by simp [SL2Z_M_,h0,h1]) (by simp [SL2Z_M_,h0,h2]) _),
-    { sorry } },
+    { simp [SL2Z_M_,h0],
+      sorry } },
   { exact this A h0 h1 h2 h3 },
-  sorry
+  intros A h0 h1 h2 h3,
+  by_cases h4 : (int.nat_abs A.b ≤ int.nat_abs A.d),
+  { exact H0 h0 h1 h2 h3 h4 },
+  apply HT5 _ (-(A.b/A.d)),
+  apply H0; simp [SL2Z_M_,h0,h1,h2,h3],
+  sorry, sorry
 end)
 (assume H2 : n = n.pred.succ, or.cases_on (lt_or_le (int.nat_abs A.a) n)
   (assume H3 : int.nat_abs (A.a) < n, HS' _ $ ih _
