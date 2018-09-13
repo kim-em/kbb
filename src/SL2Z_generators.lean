@@ -75,15 +75,11 @@ have hTinv : ∀ B, SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m T (SL2Z_M_ 
   from λ B, by repeat {rw [←is_monoid_action.mul (SL2Z_M_ m)]}; congr,
 have HT' : ∀ B, C B → C (SL2Z_M_ m T⁻¹ B),
   from λ B ih, by {have H := (HS _ $ HS _ $ HS _ $ HT _ $ HS _ $ HT _ $ HS _ ih), by rwa [hTinv] at H},
--- have HT2 : ∀ n : ℤ, C (T^n),
---   from λ n, int.induction_on n H1
---     (λ i ih, by rw [add_comm, gpow_add]; from HT _ ih)
---     (λ i ih, by rw [sub_eq_neg_add, gpow_add]; from HT1 _ ih),
 have HT3 : ∀ B, C (SL2Z_M_ m T B) → C B, from λ B ih,
   begin
     have H := HT' (SL2Z_M_ m T B) ih,
     rw [←is_monoid_action.mul (SL2Z_M_ m)] at H,
-    simp at H,
+    rw mul_left_inv at H,
     rw [is_monoid_action.one (SL2Z_M_ m)] at H,
     exact H
   end,
@@ -136,18 +132,26 @@ begin
       apply sub_nonneg_of_le,
       simpa using int.add_one_le_of_lt (mul_self_pos d_ne) } },
   { exact this A h0 h1 h2 h3 },
-  intros A h0 h1 h2 h3,
-  by_cases h4 : (int.nat_abs A.b ≤ int.nat_abs A.d),
-  { exact H0 h0 h1 h2 h3 h4 },
-  apply HT5 _ (-(A.b/A.d)),
-  apply H0; simp [SL2Z_M_,h0,h1,h2,h3],
-  { apply le_add_of_neg_add_le,
-    conv { to_lhs, simp },
-    simp,
-    apply int.div_mul_le,
-    intro nope, simp [nope] at h1,
-    exact mne0 h1.symm },
-  { sorry }
+  {intros A h0 h1 h2 h3,
+    by_cases h4 : (int.nat_abs A.b ≤ int.nat_abs A.d),
+    { exact H0 h0 h1 h2 h3 h4 },
+    { apply HT5 _ (-(A.b/A.d)),
+      apply H0; simp [SL2Z_M_,h0,h1,h2,h3],
+      { apply le_add_of_neg_add_le,
+        rw [add_zero, neg_le_neg_iff],
+        apply int.div_mul_le,
+        intro nope, rw [nope, mul_zero] at h1,
+        exact mne0 h1.symm },
+      have d_ne : A.d ≠ 0,
+          { rw ←h1 at mne0,
+            exact ne_zero_of_mul_ne_zero_left mne0 },
+      conv {to_lhs, congr,congr, rw ←int.mod_add_div A.b A.d},
+      have triv : A.d * (A.b / A.d) + -(A.b / A.d * A.d) = 0,
+        by { rw mul_comm, ring, rw sub_eq_zero },
+      suffices : int.nat_abs (A.b % A.d) ≤ int.nat_abs (A.d), by simp [this, triv],
+      rw [←int.coe_nat_le, int.nat_abs_of_nonneg (int.mod_nonneg A.b d_ne),
+          ←int.abs_eq_nat_abs],
+      exact le_of_lt (int.mod_lt A.b d_ne) } }
 end)
 (assume H2 : n = n.pred.succ, or.cases_on (lt_or_le (int.nat_abs A.a) n)
   (assume H3 : int.nat_abs (A.a) < n, HS' _ $ ih _
