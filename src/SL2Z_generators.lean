@@ -1,3 +1,4 @@
+import tactic.linarith
 import .modular_group
 
 theorem int.mul_eq_one {m n : ℤ} :
@@ -48,6 +49,18 @@ int.induction_on n dec_trivial
 @[simp, SL2Z] lemma T_pow_d (n : ℤ) : (T^n).d = 1 := (T_pow_aux n).2.2.2
 
 @[simp, SL2Z] lemma S_mul_S : S * S = -1 := rfl
+
+section linear_ordered_ring
+variables {α : Type*} [linear_ordered_ring α]
+
+lemma mul_self_pos {a : α} (h : a ≠ 0) : a * a > 0 :=
+begin
+  apply lt_of_le_of_ne (mul_self_nonneg a),
+  intro h,
+  have := linear_ordered_ring.eq_zero_or_eq_zero_of_mul_eq_zero (eq.symm h),
+  finish
+end
+end linear_ordered_ring
 
 @[elab_as_eliminator]
 protected theorem induction_on {mne0 : m ≠ 0} {C : (Mat m) → Prop} (A : Mat m)
@@ -114,8 +127,14 @@ begin
   cases (lt_or_le A.b 0) with h3 h3,
   { refine (HT5 _ (-A.b * A.d) $ this ((SL2Z_M_ m (T ^ (-A.b * A.d)) A))
       (by simp [SL2Z_M_,h0]) (by simp [SL2Z_M_,h0,h1]) (by simp [SL2Z_M_,h0,h2]) _),
-    { simp [SL2Z_M_,h0],
-      sorry } },
+    { suffices : 0 ≤ A.b +-(A.b * A.d * A.d), by simp [SL2Z_M_, h0, this],
+      rw show A.b +-(A.b * A.d * A.d) = (-A.b)*(A.d * A.d - 1), by ring,
+      apply mul_nonneg (le_of_lt (neg_pos.2 h3)),
+      have d_ne : A.d ≠ 0,
+      { rw ←h1 at mne0,
+        exact ne_zero_of_mul_ne_zero_left mne0 },
+      apply sub_nonneg_of_le,
+      simpa using int.add_one_le_of_lt (mul_self_pos d_ne) } },
   { exact this A h0 h1 h2 h3 },
   intros A h0 h1 h2 h3,
   by_cases h4 : (int.nat_abs A.b ≤ int.nat_abs A.d),
