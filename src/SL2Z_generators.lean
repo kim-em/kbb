@@ -211,7 +211,7 @@ instance reps.fintype : Π m : ℤ, m ≠ 0 → fintype (reps m)
     integral_matrices_with_determinant.ext _ _ _ rfl rfl rfl (neg_neg _) }
 
 def π : reps m → quotient (action_rel $ SL2Z_M_ m) :=
-  λ A, (@quotient.mk _ (action_rel $ SL2Z_M_ m)) A
+  λ A, (@quotient.mk _ (action_rel $ SL2Z_M_ m)) A.1
 
 lemma reps_reps : m ≠ 0 → function.surjective (π m) :=
 begin
@@ -229,6 +229,10 @@ begin
   { existsi S, refl },
   { existsi T, refl }
 end
+
+instance finitely_many_orbits {m : ℤ} [m ≠ 0] :
+fintype (quotient (action_rel (SL2Z_M_ m))) :=
+@fintype.of_surjective _ _ (reps.fintype m ‹m ≠ 0›) sorry (π m) (reps_reps m ‹m ≠ 0›)
 
 instance SL2Z_M_.decidable : Π A B, decidable (∃ S : SL2Z, SL2Z_M_ m S A = B) :=
 sorry
