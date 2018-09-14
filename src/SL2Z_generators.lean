@@ -237,5 +237,5 @@ instance : decidable_eq (quotient (action_rel (SL2Z_M_ m))) :=
 @quotient.decidable_eq _ _ $ by intros X Y; from SL2Z_M_.decidable m X Y
 #check equiv.decidable_eq_of_equiv
 def finiteness : m ≠ 0 → fintype (quotient $ action_rel $ SL2Z_M_ m) :=
-λ h, fintype.of_surjective (π m) (@reps_reps m h)
+λ h, @fintype.of_surjective _ _ (reps.fintype _ h) _ (π m) (@reps_reps m h)
 end SL2Z_M_
