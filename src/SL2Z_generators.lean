@@ -53,7 +53,7 @@ int.induction_on n dec_trivial
 @[simp, SL2Z] lemma S_mul_S : S * S = -1 := rfl
 
 @[elab_as_eliminator]
-protected theorem induction_on {mne0 : m ≠ 0} {C : (Mat m) → Prop} (A : Mat m)
+protected theorem induction_on {C : (Mat m) → Prop} (A : Mat m) (mne0 : m ≠ 0)
   (H0 : ∀ {A : Mat m} (h0 : A.c = 0) (h1 : A.a * A.d = m) (h2 : 0 ≤ A.a) (h3 : 0 ≤ A.b) (h4 : int.nat_abs A.b ≤ int.nat_abs A.d), C A)
   (HS : ∀ B, C B → C (SL2Z_M_ m S B)) (HT : ∀ B, C B → C (SL2Z_M_ m T B)) : C A :=
 have hSid : ∀ B, (SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m S (SL2Z_M_ m S B)))) = B, from λ B, by ext; simp [SL2Z_M_],
@@ -159,15 +159,35 @@ end)
 --   (λ B ih, group.in_closure.mul (group.in_closure.basic $ or.inr $ or.inl rfl) ih)
 --   (λ B ih, group.in_closure.mul (group.in_closure.basic $ or.inl rfl) ih)
 
-def reps (m : ℤ) := {A : Mat m | A.d > 0 ∧ A.b ≥ 0 ∧ A.b < A.d }
+-- (h0 : A.c = 0) (h1 : A.a * A.d = m) (h2 : 0 ≤ A.a) (h3 : 0 ≤ A.b)
+-- (h4 : int.nat_abs A.b ≤ int.nat_abs A.d)
+
+variable (m)
+
+def reps := {A : Mat m | A.c = 0 ∧ 0 ≤ A.a ∧ 0 ≤ A.b ∧ int.nat_abs A.b ≤ int.nat_abs A.d }
 
 instance : fintype (reps m) :=
 sorry
 
-def π (m : ℤ) : reps m → quotient (action_rel $ SL2Z_M_ m) :=
+def π : reps m → quotient (action_rel $ SL2Z_M_ m) :=
   λ A, (@quotient.mk _ (action_rel $ SL2Z_M_ m)) A
 
-lemma reps_reps : m ≠ 0 → function.surjective (π m) := sorry
+lemma reps_reps : m ≠ 0 → function.surjective (π m) :=
+begin
+  letI := action_rel (SL2Z_M_ m),
+  rintros m_ne ⟨A⟩,
+  apply SL2Z_M_.induction_on A m_ne,
+  { intros M h0 h1 h2 h3 h4,
+    existsi (⟨M, ⟨h0, h2, h3, h4⟩⟩ : reps m),
+    refl },
+  all_goals
+  { rintros M ⟨M', H⟩,
+    existsi M',
+    rw H,
+    apply quot.sound },
+  { existsi S, refl },
+  { existsi T, refl }
+end
 
 noncomputable lemma finiteness : m ≠ 0 → fintype (quotient $ action_rel $ SL2Z_M_ m) :=
 λ h, fintype.of_surjective (π m) (@reps_reps m h)
