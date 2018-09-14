@@ -65,6 +65,14 @@ instance (m : ℤ) : is_group_action (SL2Z_M_ m) :=
     by ext; simp [SL2Z_M_, add_mul, mul_add, mul_assoc],
   one := λ ⟨_, _, _, _, _⟩, by ext; simp [SL2Z_M_], }
 
+section
+variables (m : ℤ) (A : SL2Z) (M : integral_matrices_with_determinant m)
+@[simp, SL2Z] lemma SL2Z_M_a : (SL2Z_M_ m A M).a = A.a * M.a + A.b * M.c := rfl
+@[simp, SL2Z] lemma SL2Z_M_b : (SL2Z_M_ m A M).b = A.a * M.b + A.b * M.d := rfl
+@[simp, SL2Z] lemma SL2Z_M_c : (SL2Z_M_ m A M).c = A.c * M.a + A.d * M.c := rfl
+@[simp, SL2Z] lemma SL2Z_M_d : (SL2Z_M_ m A M).d = A.c * M.b + A.d * M.d := rfl
+end
+
 @[elab_as_eliminator]
 def fin2.rec_on {C : fin 2 → Sort*} : ∀ (n : fin 2), C 0 → C 1 → C n
 | ⟨0, _⟩ C0 _ := C0
