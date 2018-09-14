@@ -80,6 +80,9 @@ begin
   exact false.elim (or.elim (nat.lt_succ_iff_lt_or_eq.1 H1) H2 H3)
 end
 
+def reps (m : ℤ) : set (Mat m) :=
+{A : Mat m | A.c = 0 ∧ 0 < A.a ∧ 0 ≤ A.b ∧ int.nat_abs A.b < int.nat_abs A.d }
+
 theorem reduce_aux (m : ℤ) (A : Mat m) (H : int.nat_abs (A.c) ≠ 0) :
   int.nat_abs (SL2Z_M_ m S (SL2Z_M_ m (T^(-(A.a/A.c))) A)).c < int.nat_abs A.c :=
 begin
@@ -112,8 +115,7 @@ theorem reduce_def (m : ℤ) (A : Mat m) : reduce m A =
   else reduce m (SL2Z_M_ m S (SL2Z_M_ m (T^(-(A.a/A.c))) A)) :=
 by simp only [reduce]; rw [nat.strong_rec_on_beta]
 
-theorem reduce_spec (m : ℤ) (Hm : m ≠ 0) (A : Mat m) :
-  (reduce m A).c = 0 ∧ 0 < (reduce m A).a ∧ 0 ≤ (reduce m A).b ∧ int.nat_abs (reduce m A).b < int.nat_abs (reduce m A).d :=
+theorem reduce_mem_reps (m : ℤ) (Hm : m ≠ 0) (A : Mat m) : reduce m A ∈ reps m :=
 begin
   suffices : ∀ n (A : Mat m), n = int.nat_abs A.c → (reduce m A).c = 0 ∧ 0 < (reduce m A).a ∧ 0 ≤ (reduce m A).b ∧ int.nat_abs (reduce m A).b < int.nat_abs (reduce m A).d,
     from this _ A rfl,
@@ -190,7 +192,7 @@ have HT5 : ∀ B (n:ℤ), C (SL2Z_M_ m (T^n) B) → C B, from λ B n,
       conv at ih2 { congr, rw [sub_eq_neg_add, gpow_add, gpow_neg_one] },
       assumption end),
 have Hred : C (reduce m A),
-{ rcases reduce_spec m mne0 A with ⟨H1, H2, H3, H4⟩,
+{ rcases reduce_mem_reps m mne0 A with ⟨H1, H2, H3, H4⟩,
   refine H0 H1 _ H2 H3 H4,
   simpa only [H1, mul_zero, sub_zero] using (reduce m A).det },
 suffices ∀ n (A : Mat m), int.nat_abs A.c = n → C (reduce m A) → C A,
@@ -214,19 +216,65 @@ end
 -- (h0 : A.c = 0) (h1 : A.a * A.d = m) (h2 : 0 ≤ A.a) (h3 : 0 ≤ A.b)
 -- (h4 : int.nat_abs A.b ≤ int.nat_abs A.d)
 
+theorem reduce_spec (m : ℤ) (A : Mat m) : ∃ S, SL2Z_M_ m S A = reduce m A :=
+begin
+  suffices : ∀ n (A : Mat m), n = int.nat_abs A.c → ∃ S, SL2Z_M_ m S A = reduce m A,
+    from this _ A rfl,
+  intro n,
+  apply nat.strong_induction_on n,
+  intros n ih A H, subst H,
+  rw [reduce_def],
+  split_ifs with H1 H2,
+  { exact ⟨_, rfl⟩ },
+  { rw [← is_monoid_action.mul (SL2Z_M_ m), ← is_monoid_action.mul (SL2Z_M_ m)],
+    exact ⟨_, rfl⟩ },
+  cases ih _ (reduce_aux m A H1) _ rfl with S H2,
+  rw [← H2, ← is_monoid_action.mul (SL2Z_M_ m), ← is_monoid_action.mul (SL2Z_M_ m)],
+  exact ⟨_, rfl⟩
+end
+
+theorem reps_unique (m : ℤ) (hm : m ≠ 0) (M : SL2Z) (A B : Mat m)
+  (HA : A ∈ reps m) (HB : B ∈ reps m) (H : SL2Z_M_ m M A = B) :
+  A = B :=
+begin
+  rcases HA with ⟨H1, H2, H3, H4⟩,
+  rcases HB with ⟨H5, H6, H7, H8⟩,
+  cases M with a b c d H9,
+  cases A with e f g h H10,
+  cases B with i j k l H11,
+  rcases integral_matrices_with_determinant.mk.inj H with ⟨H12, H13, H14, H15⟩, clear H,
+  ext; dsimp only at *; subst H1; subst H5;
+  simp only [mul_zero, add_zero, sub_zero] at H10 H11 H12 H14;
+  have H16 := (mul_eq_zero.1 H14).resolve_right (ne_of_gt H2); subst H16; clear H14;
+  simp only [mul_zero, zero_mul, sub_zero, zero_add] at H9 H15;
+  have H16 : a ≠ -1 := (by
+  { intro H16, subst H16, rw neg_one_mul at H12, subst H12,
+    rw neg_pos at H6, exact lt_asymm H2 H6 });
+  cases (int.mul_eq_one.1 H9).resolve_right (mt and.left H16) with H17 H18;
+  substs H17 H18; clear H9 H16;
+  simp only [one_mul] at H12 H13 H15,
+  { assumption },
+  { substs H12 H13 H15,
+    rw [← int.coe_nat_lt, int.nat_abs_of_nonneg H3] at H4,
+    rw [← int.coe_nat_lt, int.nat_abs_of_nonneg H7] at H8,
+    rw [← int.abs_eq_nat_abs] at H4 H8,
+    conv {to_lhs, rw ← int.mod_eq_of_lt H3 H4},
+    conv {to_rhs, rw ← int.mod_eq_of_lt H7 H8},
+    rw [int.mod_abs, int.mod_abs, int.add_mul_mod_self] },
+  { assumption }
+end
+
 variable (m)
 
-def reps : Type :=
-{A : Mat m // A.c = 0 ∧ 0 ≤ A.a ∧ 0 ≤ A.b ∧ int.nat_abs A.b ≤ int.nat_abs A.d }
-
 instance reps.fintype_pos (m:ℕ+) : fintype (reps m) :=
-fintype.of_equiv {v : fin (m+1) × fin (m+1) × fin (m+1) // v.1.1 * v.2.2.1 = m ∧ v.2.1.1 ≤ v.2.2.1}
+fintype.of_equiv {v : fin (m+1) × fin (m+1) × fin (m+1) // v.1.1 * v.2.2.1 = m ∧ v.2.1.1 < v.2.2.1}
 { to_fun := λ A, ⟨⟨A.1.1.1, A.1.2.1.1, 0, A.1.2.2.1, by rw [mul_zero, sub_zero, ← int.coe_nat_mul, A.2.1, coe_coe]⟩,
-    rfl, trivial, trivial, by simp only [int.nat_abs_of_nat, A.2.2]⟩,
+    rfl, int.coe_nat_pos.2 $ nat.pos_of_ne_zero $ λ H, ne_of_gt m.2 $ A.2.1.symm.trans $ by rw [H, zero_mul],
+    trivial, by simp only [int.nat_abs_of_nat, A.2.2]⟩,
   inv_fun := λ A, ⟨(⟨int.nat_abs A.1.a, nat.lt_succ_of_le $ nat.le_of_dvd m.2 ⟨int.nat_abs A.1.d,
       by have := A.1.det; simp only [A.2.1, mul_zero, sub_zero] at this;
       rw [← int.nat_abs_mul, this, coe_coe, int.nat_abs_of_nat]⟩⟩,
-    ⟨int.nat_abs A.1.b, nat.lt_succ_of_le $ le_trans A.2.2.2.2 $ nat.le_of_dvd m.2 ⟨int.nat_abs A.1.a,
+    ⟨int.nat_abs A.1.b, nat.lt_succ_of_le $ le_trans (le_of_lt A.2.2.2.2) $ nat.le_of_dvd m.2 ⟨int.nat_abs A.1.a,
       by have := A.1.det; simp only [A.2.1, mul_zero, sub_zero] at this;
       rw [mul_comm, ← int.nat_abs_mul, this, coe_coe, int.nat_abs_of_nat]⟩⟩,
     ⟨int.nat_abs A.1.d, nat.lt_succ_of_le $ nat.le_of_dvd m.2 ⟨int.nat_abs A.1.a,
@@ -241,13 +289,13 @@ fintype.of_equiv {v : fin (m+1) × fin (m+1) × fin (m+1) // v.1.1 * v.2.2.1 = m
     (fin.eq_of_veq $ int.nat_abs_of_nat _),
   right_inv := λ ⟨⟨a, b, c, d, H1⟩, H2, H3, H4, H5⟩, subtype.eq $
     integral_matrices_with_determinant.ext _ _ _
-      (int.nat_abs_of_nonneg H3) (int.nat_abs_of_nonneg H4) (eq.symm H2) $
+      (int.nat_abs_of_nonneg $ le_of_lt H3) (int.nat_abs_of_nonneg H4) (eq.symm H2) $
       int.nat_abs_of_nonneg $ le_of_not_lt $ λ H6, not_le_of_lt m.2 $
       int.coe_nat_le.1 $ show (m:ℤ) ≤ 0,
       by dsimp only at H2 H3 H4 H5; rw [H2, mul_zero, sub_zero] at H1;
-      rw ← H1; from mul_nonpos_of_nonneg_of_nonpos H3 (le_of_lt H6), }
+      rw ← H1; from mul_nonpos_of_nonneg_of_nonpos (le_of_lt H3) (le_of_lt H6), }
 
-instance reps.fintype : Π m : ℤ, m ≠ 0 → fintype (reps m)
+def reps.fintype : Π m : ℤ, m ≠ 0 → fintype (reps m)
 | (int.of_nat $ n+1) H := reps.fintype_pos ⟨n+1, nat.zero_lt_succ n⟩
 | 0 H := (H rfl).elim
 | -[1+ n] H := fintype.of_equiv (reps (⟨n+1, nat.zero_lt_succ _⟩:pnat))
@@ -265,28 +313,35 @@ instance reps.fintype : Π m : ℤ, m ≠ 0 → fintype (reps m)
     integral_matrices_with_determinant.ext _ _ _ rfl rfl rfl (neg_neg _) }
 
 def π : reps m → quotient (action_rel $ SL2Z_M_ m) :=
-  λ A, (@quotient.mk _ (action_rel $ SL2Z_M_ m)) A.1
+  λ A, (@quotient.mk _ (action_rel $ SL2Z_M_ m)) A
 
-lemma reps_reps : m ≠ 0 → function.surjective (π m) :=
-begin
-  letI := action_rel (SL2Z_M_ m),
-  rintros m_ne ⟨A⟩,
-  apply SL2Z_M_.induction_on A m_ne,
-  { intros M h0 h1 h2 h3 h4,
-    existsi (⟨M, ⟨h0, h2, h3, h4⟩⟩ : reps m),
-    refl },
-  all_goals
-  { rintros M ⟨M', H⟩,
-    existsi M',
-    rw H,
-    apply quot.sound },
-  { existsi S, refl },
-  { existsi T, refl }
-end
-#check euclidean_domain.xgcd
-instance SL2Z_M_.decidable : Π A B, decidable (∃ S : SL2Z, SL2Z_M_ m S A = B) :=
-sorry
+set_option eqn_compiler.zeta true
+def reps_equiv (hm : m ≠ 0) : quotient (action_rel (SL2Z_M_ m)) ≃ reps m :=
+by letI := action_rel (SL2Z_M_ m); from
+{ to_fun := λ x, quotient.lift_on x (λ A, (⟨reduce m A, reduce_mem_reps m hm A⟩ : reps m)) $ λ A B ⟨M, H⟩,
+    let ⟨MA, HA⟩ := reduce_spec m A in
+    let ⟨MB, HB⟩ := reduce_spec m B in
+    subtype.eq $ reps_unique m hm (MB * M * MA⁻¹) _ _ (reduce_mem_reps m hm A) (reduce_mem_reps m hm B) $
+    by simp only [is_monoid_action.mul (SL2Z_M_ m)];
+    rw [← HA, ← is_monoid_action.mul (SL2Z_M_ m) MA⁻¹, inv_mul_self];
+    rw [is_monoid_action.one (SL2Z_M_ m), H, HB],
+  inv_fun := λ A, ⟦A.1⟧,
+  left_inv := λ x, quotient.induction_on x $ λ A, quotient.sound $
+    let ⟨MA, HA⟩ := reduce_spec m A in
+    ⟨MA⁻¹, show SL2Z_M_ m MA⁻¹ (reduce m A) = A,
+    by rw [← HA, ← is_monoid_action.mul (SL2Z_M_ m) MA⁻¹, inv_mul_self];
+    rw [is_monoid_action.one (SL2Z_M_ m)]⟩,
+  right_inv := λ A, subtype.eq $
+    let ⟨MA, HA⟩ := reduce_spec m A in
+    reps_unique m hm MA⁻¹ _ _ (reduce_mem_reps m hm A) A.2 $
+    show SL2Z_M_ m MA⁻¹ (reduce m A) = A,
+    by rw [← HA, ← is_monoid_action.mul (SL2Z_M_ m) MA⁻¹, inv_mul_self];
+    rw [is_monoid_action.one (SL2Z_M_ m)] }
 
-def finiteness : m ≠ 0 → fintype (quotient $ action_rel $ SL2Z_M_ m) :=
-λ h, @fintype.of_surjective _ _ (reps.fintype _ h) _ (π m) (@reps_reps m h)
+protected def decidable_eq (hm : m ≠ 0) : decidable_eq (quotient (action_rel (SL2Z_M_ m))) :=
+equiv.decidable_eq (reps_equiv m hm)
+
+def finiteness (hm : m ≠ 0) : fintype (quotient $ action_rel $ SL2Z_M_ m) :=
+@fintype.of_equiv _ _ (reps.fintype m hm) (reps_equiv m hm).symm
+
 end SL2Z_M_
