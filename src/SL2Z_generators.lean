@@ -1,6 +1,9 @@
 import .modular_group
 import .action
 
+local attribute [instance, priority 0] classical.prop_decidable
+noncomputable theory
+
 theorem int.mul_eq_one {m n : ℤ} :
   m * n = 1 ↔ m = 1 ∧ n = 1 ∨ m = -1 ∧ n = -1 :=
 ⟨λ H, or.cases_on (int.units_eq_one_or ⟨m, n, H, by rwa [mul_comm] at H⟩)
@@ -232,14 +235,8 @@ end
 
 instance finitely_many_orbits {m : ℤ} [m ≠ 0] :
 fintype (quotient (action_rel (SL2Z_M_ m))) :=
-@fintype.of_surjective _ _ (reps.fintype m ‹m ≠ 0›) sorry (π m) (reps_reps m ‹m ≠ 0›)
+@fintype.of_surjective _ _ (reps.fintype m ‹m ≠ 0›) _ (π m) (reps_reps m ‹m ≠ 0›)
 
-instance SL2Z_M_.decidable : Π A B, decidable (∃ S : SL2Z, SL2Z_M_ m S A = B) :=
-sorry
-
-instance : decidable_eq (quotient (action_rel (SL2Z_M_ m))) :=
-@quotient.decidable_eq _ _ $ by intros X Y; from SL2Z_M_.decidable m X Y
-#check equiv.decidable_eq_of_equiv
 def finiteness : m ≠ 0 → fintype (quotient $ action_rel $ SL2Z_M_ m) :=
 λ h, @fintype.of_surjective _ _ (reps.fintype _ h) _ (π m) (@reps_reps m h)
 end SL2Z_M_
