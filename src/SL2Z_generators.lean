@@ -1,8 +1,6 @@
 import .modular_group
 import .action
 
-local attribute [instance, priority 0] classical.prop_decidable
-
 theorem int.mul_eq_one {m n : ℤ} :
   m * n = 1 ↔ m = 1 ∧ n = 1 ∨ m = -1 ∧ n = -1 :=
 ⟨λ H, or.cases_on (int.units_eq_one_or ⟨m, n, H, by rwa [mul_comm] at H⟩)
@@ -164,10 +162,53 @@ end)
 
 variable (m)
 
-def reps := {A : Mat m | A.c = 0 ∧ 0 ≤ A.a ∧ 0 ≤ A.b ∧ int.nat_abs A.b ≤ int.nat_abs A.d }
+def reps : Type :=
+{A : Mat m // A.c = 0 ∧ 0 ≤ A.a ∧ 0 ≤ A.b ∧ int.nat_abs A.b ≤ int.nat_abs A.d }
 
-instance : fintype (reps m) :=
-sorry
+instance reps.fintype_pos (m:ℕ+) : fintype (reps m) :=
+fintype.of_equiv {v : fin (m+1) × fin (m+1) × fin (m+1) // v.1.1 * v.2.2.1 = m ∧ v.2.1.1 ≤ v.2.2.1}
+{ to_fun := λ A, ⟨⟨A.1.1.1, A.1.2.1.1, 0, A.1.2.2.1, by rw [mul_zero, sub_zero, ← int.coe_nat_mul, A.2.1, coe_coe]⟩,
+    rfl, trivial, trivial, by simp only [int.nat_abs_of_nat, A.2.2]⟩,
+  inv_fun := λ A, ⟨(⟨int.nat_abs A.1.a, nat.lt_succ_of_le $ nat.le_of_dvd m.2 ⟨int.nat_abs A.1.d,
+      by have := A.1.det; simp only [A.2.1, mul_zero, sub_zero] at this;
+      rw [← int.nat_abs_mul, this, coe_coe, int.nat_abs_of_nat]⟩⟩,
+    ⟨int.nat_abs A.1.b, nat.lt_succ_of_le $ le_trans A.2.2.2.2 $ nat.le_of_dvd m.2 ⟨int.nat_abs A.1.a,
+      by have := A.1.det; simp only [A.2.1, mul_zero, sub_zero] at this;
+      rw [mul_comm, ← int.nat_abs_mul, this, coe_coe, int.nat_abs_of_nat]⟩⟩,
+    ⟨int.nat_abs A.1.d, nat.lt_succ_of_le $ nat.le_of_dvd m.2 ⟨int.nat_abs A.1.a,
+      by have := A.1.det; simp only [A.2.1, mul_zero, sub_zero] at this;
+      rw [mul_comm, ← int.nat_abs_mul, this, coe_coe, int.nat_abs_of_nat]⟩⟩),
+    by have := A.1.det; simp only [A.2.1, mul_zero, sub_zero] at this;
+      rw [← int.nat_abs_mul, this, coe_coe, int.nat_abs_of_nat],
+    A.2.2.2.2⟩,
+  left_inv := λ ⟨⟨⟨a, ha⟩, ⟨b, hb⟩, ⟨d, hd⟩⟩, H1, H2⟩, subtype.eq $ prod.ext
+    (fin.eq_of_veq $ int.nat_abs_of_nat _) $ prod.ext
+    (fin.eq_of_veq $ int.nat_abs_of_nat _)
+    (fin.eq_of_veq $ int.nat_abs_of_nat _),
+  right_inv := λ ⟨⟨a, b, c, d, H1⟩, H2, H3, H4, H5⟩, subtype.eq $
+    integral_matrices_with_determinant.ext _ _ _
+      (int.nat_abs_of_nonneg H3) (int.nat_abs_of_nonneg H4) (eq.symm H2) $
+      int.nat_abs_of_nonneg $ le_of_not_lt $ λ H6, not_le_of_lt m.2 $
+      int.coe_nat_le.1 $ show (m:ℤ) ≤ 0,
+      by dsimp only at H2 H3 H4 H5; rw [H2, mul_zero, sub_zero] at H1;
+      rw ← H1; from mul_nonpos_of_nonneg_of_nonpos H3 (le_of_lt H6), }
+
+instance reps.fintype : Π m : ℤ, m ≠ 0 → fintype (reps m)
+| (int.of_nat $ n+1) H := reps.fintype_pos ⟨n+1, nat.zero_lt_succ n⟩
+| 0 H := (H rfl).elim
+| -[1+ n] H := fintype.of_equiv (reps (⟨n+1, nat.zero_lt_succ _⟩:pnat))
+{ to_fun := λ A, ⟨⟨A.1.a, A.1.b, A.1.c, -A.1.d,
+      by have := A.1.det; rw [A.2.1, mul_zero, sub_zero] at this ⊢;
+      rw [mul_neg_eq_neg_mul_symm, this]; refl⟩,
+    A.2.1, A.2.2.1, A.2.2.2.1, trans_rel_left _ A.2.2.2.2 $ eq.symm $ int.nat_abs_neg _⟩,
+  inv_fun := λ A, ⟨⟨A.1.a, A.1.b, A.1.c, -A.1.d,
+      by have := A.1.det; rw [A.2.1, mul_zero, sub_zero] at this ⊢;
+      rw [mul_neg_eq_neg_mul_symm, this]; refl⟩,
+    A.2.1, A.2.2.1, A.2.2.2.1, trans_rel_left _ A.2.2.2.2 $ eq.symm $ int.nat_abs_neg _⟩,
+  left_inv := λ ⟨⟨a, b, c, d, H1⟩, H2⟩, subtype.eq $
+    integral_matrices_with_determinant.ext _ _ _ rfl rfl rfl (neg_neg _),
+  right_inv := λ ⟨⟨a, b, c, d, H1⟩, H2⟩, subtype.eq $
+    integral_matrices_with_determinant.ext _ _ _ rfl rfl rfl (neg_neg _) }
 
 def π : reps m → quotient (action_rel $ SL2Z_M_ m) :=
   λ A, (@quotient.mk _ (action_rel $ SL2Z_M_ m)) A
@@ -189,6 +230,12 @@ begin
   { existsi T, refl }
 end
 
-noncomputable lemma finiteness : m ≠ 0 → fintype (quotient $ action_rel $ SL2Z_M_ m) :=
+instance SL2Z_M_.decidable : Π A B, decidable (∃ S : SL2Z, SL2Z_M_ m S A = B) :=
+sorry
+
+instance : decidable_eq (quotient (action_rel (SL2Z_M_ m))) :=
+@quotient.decidable_eq _ _ $ by intros X Y; from SL2Z_M_.decidable m X Y
+#check equiv.decidable_eq_of_equiv
+def finiteness : m ≠ 0 → fintype (quotient $ action_rel $ SL2Z_M_ m) :=
 λ h, fintype.of_surjective (π m) (@reps_reps m h)
 end SL2Z_M_
