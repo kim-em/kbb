@@ -7,6 +7,16 @@ run_cmd mk_simp_attr `SL2Z
 
 @[tidy] meta def tidy_ring := `[ring]
 
+@[elab_as_eliminator]
+def fin2.rec_on {C : fin 2 → Sort*} : ∀ (n : fin 2), C 0 → C 1 → C n
+| ⟨0, _⟩ C0 _ := C0
+| ⟨1, _⟩ _ C1 := C1
+| ⟨n+2, H⟩ _ _ := false.elim $ by cases H with H H; cases H with H H; cases H
+
+@[elab_as_eliminator]
+theorem fin2.induction_on {C : fin 2 → Prop} (n : fin 2) (H0 : C 0) (H1 : C 1) : C n :=
+fin2.rec_on n H0 H1
+
 @[derive decidable_eq]
 structure integral_matrices_with_determinant (m : ℤ) :=
 (a b c d : ℤ)
@@ -50,38 +60,28 @@ instance : group SL2Z :=
 @[simp, SL2Z] lemma SL2Z_inv_c (A : SL2Z) : (A⁻¹).c = -A.c := rfl
 @[simp, SL2Z] lemma SL2Z_inv_d (A : SL2Z) : (A⁻¹).d = A.a := rfl
 
-def SL2Z_M_ (m : ℤ) : SL2Z → integral_matrices_with_determinant m → integral_matrices_with_determinant m :=
+def SL2Z_M (m : ℤ) : SL2Z → integral_matrices_with_determinant m → integral_matrices_with_determinant m :=
 λ X Y, {  a := X.a * Y.a + X.b * Y.c,
           b := X.a * Y.b + X.b * Y.d,
           c := X.c * Y.a + X.d * Y.c,
           d := X.c * Y.b + X.d * Y.d,
           det := begin
-            conv { to_rhs, rw ← one_mul m, congr, rw ← X.det, skip, rw ← Y.det }, 
+            conv { to_rhs, rw ← one_mul m, congr, rw ← X.det, skip, rw ← Y.det },
             ring
           end }
 
-instance (m : ℤ) : is_group_action (SL2Z_M_ m) :=
+instance (m : ℤ) : is_group_action (SL2Z_M m) :=
 { mul := λ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩ ⟨_, _, _, _, _⟩,
-    by ext; simp [SL2Z_M_, add_mul, mul_add, mul_assoc],
-  one := λ ⟨_, _, _, _, _⟩, by ext; simp [SL2Z_M_], }
+    by ext; simp [SL2Z_M, add_mul, mul_add, mul_assoc],
+  one := λ ⟨_, _, _, _, _⟩, by ext; simp [SL2Z_M], }
 
 section
 variables (m : ℤ) (A : SL2Z) (M : integral_matrices_with_determinant m)
-@[simp, SL2Z] lemma SL2Z_M_a : (SL2Z_M_ m A M).a = A.a * M.a + A.b * M.c := rfl
-@[simp, SL2Z] lemma SL2Z_M_b : (SL2Z_M_ m A M).b = A.a * M.b + A.b * M.d := rfl
-@[simp, SL2Z] lemma SL2Z_M_c : (SL2Z_M_ m A M).c = A.c * M.a + A.d * M.c := rfl
-@[simp, SL2Z] lemma SL2Z_M_d : (SL2Z_M_ m A M).d = A.c * M.b + A.d * M.d := rfl
+@[simp, SL2Z] lemma SL2Z_M_a : (SL2Z_M m A M).a = A.a * M.a + A.b * M.c := rfl
+@[simp, SL2Z] lemma SL2Z_M_b : (SL2Z_M m A M).b = A.a * M.b + A.b * M.d := rfl
+@[simp, SL2Z] lemma SL2Z_M_c : (SL2Z_M m A M).c = A.c * M.a + A.d * M.c := rfl
+@[simp, SL2Z] lemma SL2Z_M_d : (SL2Z_M m A M).d = A.c * M.b + A.d * M.d := rfl
 end
-
-@[elab_as_eliminator]
-def fin2.rec_on {C : fin 2 → Sort*} : ∀ (n : fin 2), C 0 → C 1 → C n
-| ⟨0, _⟩ C0 _ := C0
-| ⟨1, _⟩ _ C1 := C1
-| ⟨n+2, H⟩ _ _ := false.elim $ by cases H with H H; cases H with H H; cases H
-
-@[elab_as_eliminator]
-theorem fin2.induction_on {C : fin 2 → Prop} (n : fin 2) (H0 : C 0) (H1 : C 1) : C n :=
-fin2.rec_on n H0 H1
 
 def SL2Z_SL_2_Z : SL2Z ≃ SL 2 ℤ :=
 { to_fun := λ A, ⟨units.mk
