@@ -1,7 +1,20 @@
 import .modular_group
 import .action
 
-theorem int.mul_eq_one {m n : ℤ} :
+lemma mul_pos_iff {α : Type*} [linear_ordered_ring α] (a b : α) :
+  0 < a * b ↔ (0 < a ∧ 0 < b) ∨ (a < 0 ∧ b < 0) :=
+iff.intro  pos_and_pos_or_neg_and_neg_of_mul_pos $ assume h,
+match h with
+| or.inl ⟨ha, hb⟩ := mul_pos ha hb
+| or.inr ⟨ha, hb⟩ := mul_pos_of_neg_of_neg ha hb
+end
+
+@[simp] lemma not_one_lt_zero {α : Type*} [linear_ordered_semiring α] : ¬ (1:α) < 0 :=
+not_lt_of_gt zero_lt_one
+
+namespace int
+
+theorem mul_eq_one {m n : ℤ} :
   m * n = 1 ↔ m = 1 ∧ n = 1 ∨ m = -1 ∧ n = -1 :=
 ⟨λ H, or.cases_on (int.units_eq_one_or ⟨m, n, H, by rwa [mul_comm] at H⟩)
   (λ H1, have H2 : m = 1, from units.ext_iff.1 H1,
@@ -9,8 +22,6 @@ theorem int.mul_eq_one {m n : ℤ} :
   (λ H1, have H2 : m = -1, from units.ext_iff.1 H1,
     or.inr ⟨H2, by rwa [H2, neg_one_mul, neg_eq_iff_neg_eq, eq_comm] at H⟩),
 by simp [or_imp_distrib] {contextual := tt}⟩
-
-namespace int
 
 lemma nat_abs_lt_nat_abs (i k : ℤ) (hi : 0 ≤ i) (h : i < abs k) : nat_abs i < nat_abs k :=
 coe_nat_lt.1 $ by rwa [nat_abs_of_nonneg hi, ← int.abs_eq_nat_abs]
@@ -184,29 +195,21 @@ end
 theorem reps_unique (m : ℤ) (hm : m ≠ 0) :
   ∀(M : SL2Z) (A B : Mat m), A ∈ reps m → B ∈ reps m → SL2Z_M m M A = B → A = B :=
 begin
-  rintros ⟨a, b, c, d, H9⟩ ⟨e, f, g, h, H10⟩ ⟨i, j, k, l, H11⟩ ⟨H1, H2, H3, H4⟩ ⟨H5, H6, H7, H8⟩ H,
-  rcases integral_matrices_with_determinant.mk.inj H with ⟨H12, H13, H14, H15⟩, clear H,
-  -- TODO: cleanup this proof before it goes to mathlib
-  ext;
-    dsimp only at *; subst H1; subst H5;
-    simp only [mul_zero, add_zero, sub_zero] at H10 H11 H12 H14;
-    have H16 := (mul_eq_zero.1 H14).resolve_right (ne_of_gt H2); subst H16; clear H14;
-    simp only [mul_zero, zero_mul, sub_zero, zero_add] at H9 H15;
-    have H16 : a ≠ -1 := (by
-    { intro H16, subst H16, rw neg_one_mul at H12, subst H12,
-      rw neg_pos at H6, exact lt_asymm H2 H6 });
-    cases (int.mul_eq_one.1 H9).resolve_right (mt and.left H16) with H17 H18;
-    substs H17 H18; clear H9 H16;
-    simp only [one_mul] at H12 H13 H15,
-  { assumption },
-  { substs H12 H13 H15,
-    rw [← int.coe_nat_lt, int.nat_abs_of_nonneg H3] at H4,
-    rw [← int.coe_nat_lt, int.nat_abs_of_nonneg H7] at H8,
-    rw [← int.abs_eq_nat_abs] at H4 H8,
-    conv {to_lhs, rw ← int.mod_eq_of_lt H3 H4},
-    conv {to_rhs, rw ← int.mod_eq_of_lt H7 H8},
-    rw [int.mod_abs, int.mod_abs, int.add_mul_mod_self] },
-  { assumption }
+  rintros ⟨a, b, c, d, _⟩ ⟨e, f, g, h, _⟩ ⟨i, j, k, l, _⟩
+    ⟨g_eq, e_pos, f_nonneg, f_bound⟩ ⟨k_eq, H6, f'_nonneg, f'_bound⟩ B_eq,
+  rcases integral_matrices_with_determinant.mk.inj B_eq with ⟨i_eq, j_eq, ce_0, _⟩, clear B_eq,
+  dsimp only at *,
+  subst g_eq, subst k_eq, subst j_eq, subst i_eq,
+  have : c = 0, { simp at ce_0, rcases ce_0 with rfl | rfl, { refl }, exact (irrefl _ e_pos).elim },
+  subst this,
+  have : a = 1, { by_contradiction, simp [*, int.mul_eq_one, mul_pos_iff, neg_pos, not_lt_of_gt e_pos] at * },
+  subst this,
+  by_cases hb : b ≠ 0; by_cases hh : h ≠ 0; cases_matching* [_ ∧ _, _ ∨ _]; subst_vars;
+    simp [*, neg_pos, int.coe_nat_lt.symm, (int.abs_eq_nat_abs _).symm] at *,
+  { rw [abs_of_nonneg f_nonneg] at f_bound,
+    rw [abs_of_nonneg f'_nonneg] at f'_bound,
+    rw [← int.mod_eq_of_lt f'_nonneg f'_bound, ← int.mod_eq_of_lt f_nonneg f_bound],
+    simp }
 end
 
 variable (m)
@@ -237,8 +240,10 @@ fintype.of_equiv {v : fin (m+1) × fin (m+1) × fin (m+1) // v.1.1 * v.2.2.1 = m
       (int.nat_abs_of_nonneg $ le_of_lt H3) (int.nat_abs_of_nonneg H4) (eq.symm H2) $
       int.nat_abs_of_nonneg $ le_of_not_lt $ λ H6, not_le_of_lt m.2 $
       int.coe_nat_le.1 $ show (m:ℤ) ≤ 0,
-      by dsimp only at H2 H3 H4 H5; rw [H2, mul_zero, sub_zero] at H1;
-      rw ← H1; from mul_nonpos_of_nonneg_of_nonpos (le_of_lt H3) (le_of_lt H6), }
+      by dsimp only at H2 H3 H4 H5;
+        rw [H2, mul_zero, sub_zero] at H1;
+        rw ← H1;
+      from mul_nonpos_of_nonneg_of_nonpos (le_of_lt H3) (le_of_lt H6), }
 
 def reps.fintype : Π m : ℤ, m ≠ 0 → fintype (reps m)
 | (int.of_nat $ n+1) H := reps.fintype_pos ⟨n+1, nat.zero_lt_succ n⟩
