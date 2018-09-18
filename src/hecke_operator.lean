@@ -63,13 +63,17 @@ begin
   refine λA, 1 / (A.c * z + A.d)^k * f.1 (M_trans h A z),
   { rcases f with ⟨f, weight_f⟩,
     rintros A B ⟨M, H⟩,
-    -- dsimp [is_Petersson_weight_, SL2Z_H] at weight_f,
-    rw [← H, M_trans_SL2Z_M],
+
+    change 1 / (↑(A.c) * ↑z + ↑(A.d)) ^ k * f (M_trans h A z) = 1 / (↑(B.c) * ↑z + ↑(B.d)) ^ k * f (M_trans h B z),
+
+    rw ← H,
+    rw M_trans_SL2Z_M,
     simp,
     rw (weight_f M _),
     rw ← mul_assoc,
     congr' 1,
-
+    dsimp[M_trans, «Möbius_transform»],
+    -- Patrick claims this goal is true
     sorry },
   { dsimp [is_Petersson_weight_],
     intros M z,
