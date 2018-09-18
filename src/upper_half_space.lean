@@ -1,6 +1,8 @@
 import data.complex.basic
 import .modular_group
 import tactic.linarith
+import .determinants
+import group_theory.group_action
 
 open complex
 
@@ -9,6 +11,25 @@ local notation `ℍ` := upper_half_space
 local notation `Mat` := integral_matrices_with_determinant
 
 instance upper_half_space.to_complex : has_coe ℍ ℂ := ⟨λ z, z.val⟩
+
+instance nat.to_fintype : has_coe ℕ Type := ⟨λ n, fin n⟩
+
+section
+
+open matrix
+
+noncomputable def mat2_complex (M : matrix (fin 2) (fin 2) ℝ) (z : ℂ) : ℂ :=
+(M 0 0 * z + M 0 1) / (M 1 0 * z + M 1 1)
+
+instance : is_monoid_action mat2_complex :=
+{ one := λ z, by simp [mat2_complex, of_real_zero],
+  mul := λ A B z, by { simp [mat2_complex], sorry } }
+
+variables {M : matrix (fin 2) (fin 2) ℝ} {z : ℂ}
+
+-- theorem mat2_complex.preserve_ℍ (hM : det M > 0) (hz : z ∈ ℍ) :
+
+end
 
 noncomputable def «Möbius_transform» (a b c d : ℝ) (z : ℂ) : ℂ :=
 (↑a * z + b) / (c * z + d)

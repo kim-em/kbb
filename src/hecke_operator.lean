@@ -13,6 +13,26 @@ begin
   rwa int.cast_pos
 end
 
+theorem M_trans_SL2Z_H {m : ℤ} {h : m > 0} {M : SL2Z} {A : Mat m} :
+M_trans h (SL2Z_M m M A) = SL2Z_H M ∘ (M_trans h A) :=
+begin
+  funext z,
+  simp [M_trans, SL2Z_M, SL2Z_H, «Möbius_transform»],
+
+-- m : ℤ,
+-- h : m > 0,
+-- M : SL2Z,
+-- A : Mat m,
+-- z : ↥ℍ
+-- ⊢ (↑(M.a) * ↑(A.b) + (↑(M.b) * ↑(A.d) + (↑(M.a) * ↑(A.a) + ↑(M.b) * ↑(A.c)) * ↑z)) /
+--       (↑(M.c) * ↑(A.b) + (↑(M.d) * ↑(A.d) + (↑(M.c) * ↑(A.a) + ↑(M.d) * ↑(A.c)) * ↑z)) =
+--     (↑(M.b) + ↑(M.a) * ((↑(A.b) + ↑(A.a) * ↑z) / (↑(A.d) + ↑(A.c) * ↑z))) /
+--       (↑(M.d) + ↑(M.c) * ((↑(A.b) + ↑(A.a) * ↑z) / (↑(A.d) + ↑(A.c) * ↑z)))
+
+  -- ring, -- fails
+  sorry
+end
+
 noncomputable def Hecke_operator {k : ℕ} (m : ℤ) (h : m > 0) (f : is_Petersson_weight_ (k+1)) :
   is_Petersson_weight_ (k+1) :=
 begin
@@ -22,9 +42,14 @@ begin
     (m^k : ℂ) * (finset.univ : finset orbits).sum (λo, quotient.lift_on' o _ _), _⟩,
   refine λA, 1 / (A.c * z + A.d)^(k+1) * f.1 (M_trans h A z),
   { rcases f with ⟨f, weight_f⟩,
-    rintros A B ⟨M, rfl⟩,
-    dsimp,
-    dsimp [is_Petersson_weight_] at weight_f,
+    rintros A B ⟨M, H⟩,
+    -- dsimp [is_Petersson_weight_, SL2Z_H] at weight_f,
+    rw [← H, M_trans_SL2Z_H],
+    simp,
+    rw (weight_f M _),
+    rw ← mul_assoc,
+    congr' 1,
+    
     sorry },
   { sorry }
 end

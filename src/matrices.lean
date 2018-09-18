@@ -1,5 +1,6 @@
 import algebra.big_operators data.set.finite
 import category_theory.category
+import tactic
 
 universes u v
 
@@ -44,7 +45,9 @@ rfl
 @[simp] theorem one_val_eq {i} : (1 : matrix n n α) i i = 1 :=
 by simp [one_val]
 
-@[simp] theorem one_val_ne {i j} (h : i ≠ j) : (1 : matrix n n α) i j = 0 :=
+meta def dec_tac : tactic unit := `[exact dec_trivial]
+
+@[simp] theorem one_val_ne {i j} (h : i ≠ j . dec_tac) : (1 : matrix n n α) i j = 0 :=
 by simp [one_val, h]
 
 end one
