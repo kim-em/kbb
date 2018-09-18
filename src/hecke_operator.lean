@@ -13,24 +13,44 @@ begin
   rwa int.cast_pos
 end
 
+lemma aux_10 {m : ℤ} (h : m > 0) {A : Mat m} (z : ℍ) : (↑(A.d) + ↑(A.c) * ↑z) ≠ (0 : ℂ) := sorry
+
 theorem M_trans_SL2Z_H {m : ℤ} {h : m > 0} {M : SL2Z} {A : Mat m} :
 M_trans h (SL2Z_M m M A) = SL2Z_H M ∘ (M_trans h A) :=
 begin
   funext z,
   simp [M_trans, SL2Z_M, SL2Z_H, «Möbius_transform»],
+  let a := (↑(M.a) * ↑(A.b) + (↑(M.b) * ↑(A.d) + (↑(M.a) * ↑(A.a) + ↑(M.b) * ↑(A.c)) * ↑z)),
+  let b := (↑(M.c) * ↑(A.b) + (↑(M.d) * ↑(A.d) + (↑(M.c) * ↑(A.a) + ↑(M.d) * ↑(A.c)) * ↑z)),
+  let c := (↑(M.b) + ↑(M.a) * ((↑(A.b) + ↑(A.a) * ↑z) / (↑(A.d) + ↑(A.c) * ↑z))),
+  let d := (↑(M.d) + ↑(M.c) * ((↑(A.b) + ↑(A.a) * ↑z) / (↑(A.d) + ↑(A.c) * ↑z))),
+  change a/b = c/d,
+  rw div_eq_div_iff,
+  have ne : (↑(A.d) + ↑(A.c) * ↑z) ≠ (0 : ℂ) := aux_10 h z,
+  apply (domain.mul_right_inj ne).1,
+  dsimp[d],
+  conv {
+    to_lhs,
+    rw mul_assoc,
+    congr, skip,
+    rw add_mul,
+    congr, skip,
+    rw mul_assoc,
+    congr, skip,
 
--- m : ℤ,
--- h : m > 0,
--- M : SL2Z,
--- A : Mat m,
--- z : ↥ℍ
--- ⊢ (↑(M.a) * ↑(A.b) + (↑(M.b) * ↑(A.d) + (↑(M.a) * ↑(A.a) + ↑(M.b) * ↑(A.c)) * ↑z)) /
---       (↑(M.c) * ↑(A.b) + (↑(M.d) * ↑(A.d) + (↑(M.c) * ↑(A.a) + ↑(M.d) * ↑(A.c)) * ↑z)) =
---     (↑(M.b) + ↑(M.a) * ((↑(A.b) + ↑(A.a) * ↑z) / (↑(A.d) + ↑(A.c) * ↑z))) /
---       (↑(M.d) + ↑(M.c) * ((↑(A.b) + ↑(A.a) * ↑z) / (↑(A.d) + ↑(A.c) * ↑z)))
+    rw div_mul_cancel _ ne },
+  dsimp[c],
+  conv {
+   to_rhs,
+   rw [mul_comm, ←mul_assoc],
+   congr,
+   rw mul_add,
+   congr, skip,
+   rw [mul_comm, mul_assoc, div_mul_cancel _ ne] },
+  dsimp[a, b],
+  ring,
 
-  -- ring, -- fails
-  sorry
+  repeat { sorry }
 end
 
 noncomputable def Hecke_operator {k : ℕ} (m : ℤ) (h : m > 0) (f : is_Petersson_weight_ (k+1)) :
@@ -49,7 +69,7 @@ begin
     rw (weight_f M _),
     rw ← mul_assoc,
     congr' 1,
-    
+
     sorry },
   { sorry }
 end
