@@ -13,46 +13,31 @@ begin
   rwa int.cast_pos
 end
 
-lemma aux_10 {m : ℤ} (h : m > 0) {A : Mat m} (z : ℍ) : (↑(A.d) + ↑(A.c) * ↑z) ≠ (0 : ℂ) := sorry
+lemma aux_10 {m : ℤ} (h : m > 0) (A : Mat m) (z : ℍ) : (↑(A.c) * ↑z + ↑(A.d)) ≠ (0 : ℂ) :=
+have H1 : (↑(A.a) : ℝ) * ↑(A.d) - ↑(A.b) * ↑(A.c) > 0,
+  by rw [← int.cast_mul, ← int.cast_mul, ← int.cast_sub];
+  from int.cast_pos.2 (trans_rel_left _ h A.det.symm),
+have _ := preserve_ℍ.aux H1 z.2,
+by simpa only [complex.of_real_int_cast]
 
 theorem M_trans_SL2Z_M {m : ℤ} {h : m > 0} {M : SL2Z} {A : Mat m} :
 M_trans h (SL2Z_M m M A) = SL2Z_H M ∘ (M_trans h A) :=
 begin
-  funext z,
-  simp [M_trans, SL2Z_M, SL2Z_H, «Möbius_transform»],
-  let a := (↑(M.a) * ↑(A.b) + (↑(M.b) * ↑(A.d) + (↑(M.a) * ↑(A.a) + ↑(M.b) * ↑(A.c)) * ↑z)),
-  let b := (↑(M.c) * ↑(A.b) + (↑(M.d) * ↑(A.d) + (↑(M.c) * ↑(A.a) + ↑(M.d) * ↑(A.c)) * ↑z)),
-  let c := (↑(M.b) + ↑(M.a) * ((↑(A.b) + ↑(A.a) * ↑z) / (↑(A.d) + ↑(A.c) * ↑z))),
-  let d := (↑(M.d) + ↑(M.c) * ((↑(A.b) + ↑(A.a) * ↑z) / (↑(A.d) + ↑(A.c) * ↑z))),
-  change a/b = c/d,
-  rw div_eq_div_iff,
-  have ne : (↑(A.d) + ↑(A.c) * ↑z) ≠ (0 : ℂ) := aux_10 h z,
-  apply (domain.mul_right_inj ne).1,
-  dsimp[d],
-  conv {
-    to_lhs,
-    rw mul_assoc,
-    congr, skip,
-    rw add_mul,
-    congr, skip,
-    rw mul_assoc,
-    congr, skip,
-
-    rw div_mul_cancel _ ne },
-  dsimp[c],
-  conv {
-   to_rhs,
-   rw [mul_comm, ←mul_assoc],
-   congr,
-   rw mul_add,
-   congr, skip,
-   rw [mul_comm, mul_assoc, div_mul_cancel _ ne] },
-  dsimp[a, b],
-  ring,
-
-  repeat { sorry }
+  funext z, apply subtype.eq,
+  change _/_=_/_,
+  have H3 := aux_10 h A z,
+  have H4 := aux_10 zero_lt_one M (M_trans h A z),
+  unfold M_trans «Möbius_transform» at H4 ⊢,
+  simp only [subtype.coe_mk, complex.of_real_int_cast] with SL2Z at H3 H4 ⊢,
+  rw ← mul_div_mul_right _ H4 H3,
+    conv { to_rhs,
+      rw [add_mul, add_mul, mul_assoc, mul_assoc],
+      rw [div_mul_cancel _ H3] },
+  simp only [int.cast_add, int.cast_mul],
+  congr' 1; simp only [add_mul, mul_add, mul_assoc, add_left_comm, add_assoc]
 end
 
+set_option eqn_compiler.zeta true
 noncomputable def Hecke_operator {k : ℕ} (m : ℤ) (h : m > 0) (f : is_Petersson_weight_ k) :
   is_Petersson_weight_ k :=
 begin
