@@ -15,7 +15,7 @@ end
 
 lemma aux_10 {m : ℤ} (h : m > 0) {A : Mat m} (z : ℍ) : (↑(A.d) + ↑(A.c) * ↑z) ≠ (0 : ℂ) := sorry
 
-theorem M_trans_SL2Z_H {m : ℤ} {h : m > 0} {M : SL2Z} {A : Mat m} :
+theorem M_trans_SL2Z_M {m : ℤ} {h : m > 0} {M : SL2Z} {A : Mat m} :
 M_trans h (SL2Z_M m M A) = SL2Z_H M ∘ (M_trans h A) :=
 begin
   funext z,
@@ -53,24 +53,37 @@ begin
   repeat { sorry }
 end
 
-noncomputable def Hecke_operator {k : ℕ} (m : ℤ) (h : m > 0) (f : is_Petersson_weight_ (k+1)) :
-  is_Petersson_weight_ (k+1) :=
+noncomputable def Hecke_operator {k : ℕ} (m : ℤ) (h : m > 0) (f : is_Petersson_weight_ k) :
+  is_Petersson_weight_ k :=
 begin
   let orbits := quotient (action_rel (SL2Z_M m)),
   letI h_orbits : fintype orbits := SL2Z_M.finiteness m (ne_of_gt h),
   refine ⟨λz:ℍ,
     (m^k : ℂ) * (finset.univ : finset orbits).sum (λo, quotient.lift_on' o _ _), _⟩,
-  refine λA, 1 / (A.c * z + A.d)^(k+1) * f.1 (M_trans h A z),
+  refine λA, 1 / (A.c * z + A.d)^k * f.1 (M_trans h A z),
   { rcases f with ⟨f, weight_f⟩,
     rintros A B ⟨M, H⟩,
     -- dsimp [is_Petersson_weight_, SL2Z_H] at weight_f,
-    rw [← H, M_trans_SL2Z_H],
+    rw [← H, M_trans_SL2Z_M],
     simp,
     rw (weight_f M _),
     rw ← mul_assoc,
     congr' 1,
 
     sorry },
-  { sorry }
+  { dsimp [is_Petersson_weight_],
+    intros M z,
+    conv { to_rhs, rw ← mul_assoc, congr, rw mul_comm },
+    conv { to_rhs, rw mul_assoc, rw finset.mul_sum, },
+    congr,
+    funext o,
+    rcases o with ⟨A⟩,
+    dsimp [quotient.lift_on',quotient.lift_on,quot.lift_on],
+    rcases f with ⟨f, weight_f⟩,
+    dsimp [is_Petersson_weight_] at weight_f,
+    simp,
+    dsimp [SL2Z_H,M_trans,«Möbius_transform»],
+    simp,
+    sorry }
 end
 
