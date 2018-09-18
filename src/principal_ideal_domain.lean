@@ -89,8 +89,25 @@ begin
   simpa [or_imp_distrib, forall_and_distrib, eq, associated_mul_mul ha₁ ha₂] using and.intro hf₁ hf₂
 end
 
-
-
 end
+
+lemma is_maximal_ideal_of_irreducible {p : α} (hp : irreducible p) :
+  is_maximal_ideal {a | p ∣ a} :=
+begin
+  letI h : is_ideal {a | p ∣ a} := @is_principal_ideal.to_is_ideal _ _ _ ⟨⟨p, rfl⟩⟩,
+  refine is_maximal_ideal.mk _ (assume ⟨q, hq⟩, hp.1 ⟨units.mk_of_mul_eq_one _ q hq.symm, rfl⟩) _,
+  assume x T i hT hxp hx,
+  rcases (principal T).principal with ⟨q, rfl⟩,
+  rcases hT (dvd_refl p) with ⟨c, rfl⟩,
+  rcases hp.2 _ _ rfl with ⟨q, rfl⟩ | ⟨c, rfl⟩,
+  { exact units.coe_dvd _ _ },
+  { simp at hxp hx, exact (hxp hx).elim }
+end
+
+lemma prime_of_irreducible (p : α) (hp : irreducible p) :
+  ∀a b, p ∣ a * b → (p ∣ a ∨ p ∣ b) :=
+have is_prime_ideal {a | p ∣ a}, from
+  @is_maximal_ideal.is_prime_ideal α _ _ (is_maximal_ideal_of_irreducible hp),
+this.mem_or_mem_of_mul_mem
 
 end principal_ideal_domain
