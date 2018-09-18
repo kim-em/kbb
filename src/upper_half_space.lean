@@ -6,6 +6,7 @@ open complex
 
 def upper_half_space := {z : ℂ | z.im > 0}
 local notation `ℍ` := upper_half_space
+local notation `Mat` := integral_matrices_with_determinant
 
 instance upper_half_space.to_complex : has_coe ℍ ℂ := ⟨λ z, z.val⟩
 
@@ -30,6 +31,13 @@ lemma preserve_ℍ {a b c d : ℝ} (det : a * d - b * c > 0) (z : ℂ) (h : z.im
 calc _ = (a * d - b * c) * z.im * (norm_sq (↑c * z + ↑d))⁻¹ :
   by simp [«Möbius_transform», div_eq_mul_inv, -add_comm]; ring
    ... > 0 : mul_pos (mul_pos det h) (inv_pos (norm_sq_pos.2 (preserve_ℍ.aux det h)))
+
+noncomputable def M_trans {m : ℤ} (hm : 0 < m) (A : Mat m) (z : ℍ) : ℍ :=
+begin
+  refine ⟨«Möbius_transform» A.a A.b A.c A.d z, preserve_ℍ _ _ z.2⟩,
+  show 0 < (A.a * A.d - A.b * A.c : ℝ),
+  rwa [← int.cast_mul, ← int.cast_mul, ← int.cast_sub, ← int.cast_zero, int.cast_lt, A.det],
+end
 
 theorem SL2Z_H.aux {a b c d : ℤ} (h : a * d - b * c = 1) : (a : ℝ) * d - b * c > 0 :=
 by convert zero_lt_one; simpa using congr_arg (coe : ℤ → ℝ) h

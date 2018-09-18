@@ -20,13 +20,11 @@ begin
   letI h_orbits : fintype orbits := SL2Z_M.finiteness m (ne_of_gt h),
   refine ⟨λz:ℍ,
     (m^k : ℂ) * (finset.univ : finset orbits).sum (λo, quotient.lift_on' o _ _), _⟩,
-  refine λA,
-    1 / (A.c * z + A.d)^(k+1) *
-    f.1 (⟨«Möbius_transform» A.a A.b A.c A.d z, preserve_ℍ (pos_det' h) z z.2⟩ : ℍ),
+  refine λA, 1 / (A.c * z + A.d)^(k+1) * f.1 (M_trans h A z),
   { rcases f with ⟨f, weight_f⟩,
-    rintros A B ⟨M, eq⟩,
+    rintros A B ⟨M, rfl⟩,
     dsimp,
-    dsimp [is_Petersson_weight_, SL2Z_H] at weight_f,
+    dsimp [is_Petersson_weight_] at weight_f,
     sorry },
   { sorry }
 end
