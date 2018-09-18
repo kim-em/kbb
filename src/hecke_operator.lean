@@ -13,26 +13,20 @@ begin
   rwa int.cast_pos
 end
 
-def Hecke_operator {k : ℕ} (m : ℤ) (h : m > 0) (f : is_Petersson_weight_ (k+1)) :
+noncomputable def Hecke_operator {k : ℕ} (m : ℤ) (h : m > 0) (f : is_Petersson_weight_ (k+1)) :
   is_Petersson_weight_ (k+1) :=
-let orbits := quotient (action_rel (SL2Z_M m)) in
-⟨ λ z : ℍ, (m^k : ℂ) * finset.univ.sum
 begin
-  haveI := SL2Z_M.finiteness m (ne_of_gt h),
-  apply quotient.lift,
-  swap,
-  show (Mat m → ℂ),
-  intro A,
-  cases f with f weight_f,
-  refine 1/(A.c * z + A.d)^(k+1) *
-   (f (⟨«Möbius_transform» A.a A.b A.c A.d z.1,
-    preserve_ℍ (pos_det' h) z.1 z.2⟩ : ℍ)),
-  intros A B H,
-  cases f with f weight_f,
-  dsimp,
-  dsimp [is_Petersson_weight_, SL2Z_H] at weight_f,
+  let orbits := quotient (action_rel (SL2Z_M m)),
+  letI h_orbits : fintype orbits := SL2Z_M.finiteness m (ne_of_gt h),
+  refine ⟨λz:ℍ,
+    (m^k : ℂ) * (finset.univ : finset orbits).sum (λo, quotient.lift_on' o _ _), _⟩,
+  refine λA,
+    1 / (A.c * z + A.d)^(k+1) *
+    f.1 (⟨«Möbius_transform» A.a A.b A.c A.d z.1, preserve_ℍ (pos_det' h) z z.2⟩ : ℍ),
+  { rcases f with ⟨f, weight_f⟩,
+    assume A B H,
+    dsimp [is_Petersson_weight_, SL2Z_H] at weight_f,
+    sorry },
+  { sorry }
+end
 
-  --dsimp [(≈)] at H,
-
-  sorry,
-end⟩
