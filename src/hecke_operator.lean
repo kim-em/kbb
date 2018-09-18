@@ -22,9 +22,10 @@ begin
     (m^k : ℂ) * (finset.univ : finset orbits).sum (λo, quotient.lift_on' o _ _), _⟩,
   refine λA,
     1 / (A.c * z + A.d)^(k+1) *
-    f.1 (⟨«Möbius_transform» A.a A.b A.c A.d z.1, preserve_ℍ (pos_det' h) z z.2⟩ : ℍ),
+    f.1 (⟨«Möbius_transform» A.a A.b A.c A.d z, preserve_ℍ (pos_det' h) z z.2⟩ : ℍ),
   { rcases f with ⟨f, weight_f⟩,
-    assume A B H,
+    rintros A B ⟨M, eq⟩,
+    dsimp,
     dsimp [is_Petersson_weight_, SL2Z_H] at weight_f,
     sorry },
   { sorry }
