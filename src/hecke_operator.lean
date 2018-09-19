@@ -53,13 +53,18 @@ begin
 
     rw ← H,
     rw M_trans_SL2Z_M,
-    simp,
+    simp [-one_div_eq_inv],
     rw (weight_f M _),
     rw ← mul_assoc,
     congr' 1,
     dsimp[M_trans, «Möbius_transform»],
-    -- Patrick claims this goal is true
-    sorry },
+    ring,
+    rw pow_inv,
+    rw pow_inv,
+    rw ← mul_pow,
+    congr' 1,
+    -- Patrick claims this goal is true -- and so does Johan
+    repeat {sorry} },
   { dsimp [is_Petersson_weight_],
     intros M z,
     conv { to_rhs, rw ← mul_assoc, congr, rw mul_comm },
