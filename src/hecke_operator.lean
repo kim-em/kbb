@@ -69,15 +69,19 @@ begin
     intros M z,
     conv { to_rhs, rw ← mul_assoc, congr, rw mul_comm },
     conv { to_rhs, rw mul_assoc, rw finset.mul_sum, },
-    congr,
-    funext o,
-    rcases o with ⟨A⟩,
-    dsimp [quotient.lift_on',quotient.lift_on,quot.lift_on],
-    rcases f with ⟨f, weight_f⟩,
-    dsimp [is_Petersson_weight_] at weight_f,
-    simp,
-    dsimp [SL2Z_H,M_trans,«Möbius_transform»],
-    simp,
+    congr' 1,
+    refine finset.sum_bij _ _ _ _ _,
+    -- Define the function given by right multiplication with M
+    -- The other goals should be straightforward
+    
+    -- funext o,
+    -- rcases o with ⟨A⟩,
+    -- dsimp [quotient.lift_on',quotient.lift_on,quot.lift_on],
+    -- rcases f with ⟨f, weight_f⟩,
+    -- dsimp [is_Petersson_weight_] at weight_f,
+    -- simp,
+    -- dsimp [SL2Z_H,M_trans,«Möbius_transform»],
+    -- simp,
     sorry }
 end
 
